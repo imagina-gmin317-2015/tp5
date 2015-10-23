@@ -1,9 +1,10 @@
-#include "trianglewindow.h"
+#include "gamewindow.h"
 
 #include <QtGui/QGuiApplication>
 #include <QtGui/QMatrix4x4>
 #include <QtGui/QOpenGLShaderProgram>
 #include <QtGui/QScreen>
+#include <QMainWindow>
 
 #include <QtCore/qmath.h>
 #include <QMouseEvent>
@@ -14,50 +15,88 @@
 
 #include <QtCore>
 #include <QtGui>
+#include <QPushButton>
+#include <QApplication>
+#include <QWidget>
+#include <QObject>
+#include <QThread>
 
-#include <omp.h>
-
+#include "camera.h"
+#include "serverthread.h"
+#include "controllerwindow.h"
+#include "resourcemanager.h"
 using namespace std;
+
+#define SERVER 1
+#define CLIENT 0
+
+#define SUMMER "summer"
+#define AUTUMN "autumn"
+#define WINTER "winter"
+#define SPRING "spring"
+
+
+
+GameWindow *createWindow(Camera* camera, float framerate) {
+    QSurfaceFormat format;
+    format.setSamples(16);
+
+    GameWindow *w = new GameWindow(camera, framerate);
+    w->setFormat(format);
+    w->resize(1366, 1024);
+    w->show();
+    w->setAnimating(true);
+    return w;
+}
 
 
 int main(int argc, char **argv)
 {
-//test omp
-//#pragma omp parallel
-//    qDebug() << "Hello from thread %d, nthreads %d\n", omp_get_thread_num(), omp_get_num_threads();
-
     srand(time(NULL));
-    QGuiApplication app(argc, argv);
-    
-    QSurfaceFormat format;
-    format.setSamples(16);
-    
-    paramCamera* c=new paramCamera();
-    
-    QTimer* calendar = new QTimer;
+    QApplication app(argc, argv);
 
-    TriangleWindow* window[4];
-    for(int i = 0; i < 4; i++)
-    {
-        if (i == 0)
-            window[i] = new TriangleWindow();
-        else
-            window[i] = new TriangleWindow(30);
-        window[i]->setSeason(i);
-        window[i]->c = c;
-        window[i]->setFormat(format);
-        window[i]->resize(500,375);
-        int x = i%2;
-        int y = i>>1;
-                
-        window[i]->setPosition(x*500,y*450);
-        window[i]->show();
+    ResourceManager::init();
 
-        calendar->connect(calendar, SIGNAL(timeout()),window[i], SLOT(updateSeason()));
-    }
-    
-    calendar->start(20);
+    ControllerWindow window;
+    window.show();
+    window.resize(200, 120);
+    window.move(1100, 400);
+
+    Camera *c = new Camera();
+    GameWindow *g = createWindow(c, 1.0f / 60.0f);
+    g->setPosition(120, 10);
+
+    QObject::connect(g, SIGNAL(requestLoad()), &window, SLOT(onLoadRequest()));
+    QObject::connect(g, SIGNAL(requestSave()), &window, SLOT(onSaveRequest()));
+    QObject::connect(&window, SIGNAL(requestLoad()), g, SLOT(onLoadRequest()));
+    QObject::connect(&window, SIGNAL(requestSave()), g, SLOT(onSaveRequest()));
+
+    g = createWindow(c, 1.0f / 60.0f);
+    g->setPosition(640, 10);
+
+    QObject::connect(g, SIGNAL(requestLoad()), &window, SLOT(onLoadRequest()));
+    QObject::connect(g, SIGNAL(requestSave()), &window, SLOT(onSaveRequest()));
+    QObject::connect(&window, SIGNAL(requestLoad()), g, SLOT(onLoadRequest()));
+    QObject::connect(&window, SIGNAL(requestSave()), g, SLOT(onSaveRequest()));
+
+    g = createWindow(c, 1.0f / 60.0f);
+    g->setPosition(640, 400);
+
+    QObject::connect(g, SIGNAL(requestLoad()), &window, SLOT(onLoadRequest()));
+    QObject::connect(g, SIGNAL(requestSave()), &window, SLOT(onSaveRequest()));
+    QObject::connect(&window, SIGNAL(requestLoad()), g, SLOT(onLoadRequest()));
+    QObject::connect(&window, SIGNAL(requestSave()), g, SLOT(onSaveRequest()));
+
+    g = createWindow(c, 1.0f / 60.0f);
+    g->setPosition(120, 400);
+
+    QObject::connect(g, SIGNAL(requestLoad()), &window, SLOT(onLoadRequest()));
+    QObject::connect(g, SIGNAL(requestSave()), &window, SLOT(onSaveRequest()));
+    QObject::connect(&window, SIGNAL(requestLoad()), g, SLOT(onLoadRequest()));
+    QObject::connect(&window, SIGNAL(requestSave()), g, SLOT(onSaveRequest()));
 
     return app.exec();
 }
+
+
 
