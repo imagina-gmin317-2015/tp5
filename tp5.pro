@@ -1,11 +1,12 @@
-QMAKE_MAC_SDK = macosx10.11
+#QMAKE_MAC_SDK = macosx10.11
 
-QMAKE_CXXFLAGS += -stdlib=libc++ -std=c++11 -fopenmp
+#QMAKE_CXXFLAGS += -stdlib=libc++ -std=c++11 -fopenmp
+QMAKE_CXXFLAGS += -std=c++11 -fopenmp
 
 INCLUDEPATH += /opt/local/include
 INCLUDEPATH += /usr/local/include/libiomp
 
-LIBS += -stdlib=libc++
+#LIBS += -stdlib=libc++
 
 SOURCES += $$PWD/openglwindow.cpp \
     main.cpp \
