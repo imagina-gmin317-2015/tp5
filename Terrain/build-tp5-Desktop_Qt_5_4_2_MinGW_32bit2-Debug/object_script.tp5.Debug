@@ -1,0 +1,15 @@
+INPUT(
+./debug\openglwindow.o
+./debug\gamewindow.o
+./debug\camera.o
+./debug\mytcpserver.o
+./debug\filemanager.o
+./debug\terrain.o
+./debug\gameobject.o
+./debug\texture.o
+./debug\tga.o
+./debug\main.o
+./debug\qrc_gestionnaire.o
+./debug\moc_openglwindow.o
+./debug\moc_mytcpserver.o
+);

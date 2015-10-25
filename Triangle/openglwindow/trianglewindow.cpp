@@ -75,7 +75,6 @@ static const char *fragmentShaderSource =
         "   gl_FragColor = texture2D(tex,gl_TexCoord[0].st) * col * couleurDiffuse;\n"
         "}\n";
 
-GLuint textures[5]; // pour nos 5 textures
 int rotY = 0;
 
 TriangleWindow::TriangleWindow() : m_program(0), m_frame(0)

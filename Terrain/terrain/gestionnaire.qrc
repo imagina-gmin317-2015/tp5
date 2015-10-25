@@ -1,0 +1,14 @@
+<RCC>
+    <qresource prefix="/">
+        <file>autumntree.ply</file>
+        <file>springtree.ply</file>
+        <file>summertree.ply</file>
+        <file>wintertree.ply</file>
+        <file>heightmap-1.png</file>
+        <file>heightmap-2.png</file>
+        <file>heightmap-3.png</file>
+        <file>summertree.stl</file>
+        <file>springtree.obj</file>
+        <file>island_tree.ply</file>
+    </qresource>
+</RCC>
