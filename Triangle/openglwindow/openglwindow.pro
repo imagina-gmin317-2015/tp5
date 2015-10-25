@@ -16,13 +16,16 @@ SOURCES += main.cpp \
     trianglewindow.cpp \
     openglwindow.cpp \
     tga.cpp \
-    terrain.cpp
+    terrain.cpp \
+    texture.cpp
 
 HEADERS  += \
     trianglewindow.h \
     openglwindow.h \
     tga.h \
-    terrain.h
+    terrain.h \
+    texture.h \
+    point.h
 
 FORMS    +=
 
