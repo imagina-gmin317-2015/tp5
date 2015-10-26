@@ -71,6 +71,11 @@ private:
     QCursor* cursor;
     QCursor* cursor2;
     bool cursorCaptured = false;
+
+    QVector<QVector3D> verticesArray;
+    QVector<QVector3D> normalsArray;
+    QVector<QVector3D> colorsArray;
+
     GLfloat* vertices;
     std::vector<point*> normals;
     QString imagePath;
@@ -99,6 +104,8 @@ private:
     float lastUpdate = 0;
     bool fill = false;
     QTimer timer;
+
+    GLuint textureId;
 };
 
 

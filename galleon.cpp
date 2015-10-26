@@ -17,8 +17,13 @@ void Galleon::update(float delta)
     elapsed += delta;
     if(qrand() % 1000 < 5) rotation *= -1;
 
+//    int x1 = 0; int y1 = 0;
+
     int x1 = (this->entity->getX() + 0.5) * this->image->width();
     int y1 = (this->entity->getY() + 0.5) * this->image->height();
+
+    if(x1 > this->image->width()) x1 = this->image->width() - 1;
+    if(y1 > this->image->height()) y1 = this->image->height() - 1;
 
     if(waterHeight - qGray(this->image->pixel(x1, y1)) * 0.0008 > 0.01) {
         this->animated = true;

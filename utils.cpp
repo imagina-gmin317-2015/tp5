@@ -14,3 +14,25 @@ std::vector<float> Utils::getNormal(point t1, point t2, point t3) {
     return res;
 }
 
+QVector3D Utils::getNormal(QVector3D v1, QVector3D v2, QVector3D v3)
+{
+    QVector3D p1, p2, p3;
+    if(v1.y() == v2.y()) {
+        if(v1.x() < v3.x()) {
+            p1 = v1; p2 = v2; p3 = v3;
+        } else {
+            p1 = v1; p2 = v3; p3 = v2;
+        }
+    } else {
+        if(v1.x() < v3.x()) {
+            p1 = v1; p2 = v3; p3 = v2;
+        } else {
+            p1 = v1; p2 = v2; p3 = v3;
+        }
+    }
+
+    v1 = p2 - p1;
+    v2 = p3 - p1;
+    return QVector3D::normal(v1, v2);
+}
+

@@ -28,7 +28,7 @@ void Birds::update(float delta)
     elapsed += delta;
 #pragma omp parallel for
     for (int i = 0; i < entities.size(); ++i) {
-        int angle = elapsed * ((i % 2 == 0) ? 1 : -1) * (i + 5) * 50;
+        int angle = elapsed * ((i % 2 == 0) ? 1 : -1) * (i % 8 + 5) * 50;
         float speed = 0.5;
         PlyEntity *e = entities[i];
         float x = cos(angle * 0.0174533f) * speed * delta;

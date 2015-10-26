@@ -125,7 +125,7 @@ void RainParticles::draw(float delta)
                 p4.x = i * 0.01; p4.y = (j + 1) * 0.01;
                 p4.z = waterHeight + sin(i + elapsed + r) * 0.005 + cos(j + 1 + elapsed + r) * 0.005;
 
-                float z = qGray(image->pixel((i + 50) * 240 * 0.01, (j + 50) * 240 * 0.01));
+                float z = qGray(image->pixel((i + 50) * this->image->width() * 0.01, (j + 50) * this->image->height() * 0.01));
                 z *= 0.0008;
                 //                qDebug() << (i + 50) * 240 * 0.01;
                 std::vector<float> vec = Utils::getNormal(p1, p3, p2);
@@ -140,7 +140,7 @@ void RainParticles::draw(float delta)
                 if( z < waterHeight) {
                     if(i == -50) {
                         glVertex3f(-0.5, p3.y, z);
-                        glVertex3f(-0.5, p1.y, qGray(image->pixel(0, (fmax(j - 1 + 50, 0)) * 240 * 0.01)) * 0.0008);
+                        glVertex3f(-0.5, p1.y, z);
                         glVertex3f(-0.5, p1.y, p1.z);
                         glVertex3f(-0.5, p3.y, p4.z);
                     } else if (i == 49) {

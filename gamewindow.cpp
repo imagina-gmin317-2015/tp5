@@ -11,6 +11,7 @@
 #include <time.h>
 #include <sys/time.h>
 #include <iostream>
+#include <functional>
 
 #include <QtCore>
 #include <QtGui>
@@ -56,11 +57,12 @@ void GameWindow::initialize()
     glDepthFunc(GL_LESS);
     glEnable(GL_COLOR_MATERIAL);
     glEnable(GL_CULL_FACE);
+    glEnable(GL_TEXTURE_2D);
     glEnable (GL_BLEND);
     glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);	// Active la correction de perspective (pour ombrage, texture, ...)
 
-    snow = new SnowParticles(1000, 1000, &this->m_image);
+    snow = new SnowParticles(m_image.width() * 2, m_image.height() * 2, &this->m_image);
     rain = new RainParticles(&this->m_image);
     drought = new Drought();
     spring = new Spring(&this->m_image);
@@ -68,6 +70,16 @@ void GameWindow::initialize()
     this->windowId = this->season;
     this->onSeasonChange();
     this->displayNormals = false;
+
+    QImage image(":/grass.jpg");
+
+    glGenTextures(1, &textureId);
+    glBindTexture(GL_TEXTURE_2D, textureId);
+    glTexImage2D(GL_TEXTURE_2D, 0, 3, image.width(), image.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, image.bits());
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+    glBindTexture( GL_TEXTURE_2D, 0 );
+
 }
 
 void GameWindow::onSeasonChange()
@@ -199,9 +211,9 @@ void GameWindow::keyPressEvent(QKeyEvent *event)
     case Qt::Key_Space:
         displayNormals = !displayNormals;
         if(displayNormals) {
-            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+            //            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
         } else {
-            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+            //            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
         }
         break;
     case 'Z':
@@ -231,44 +243,36 @@ void GameWindow::keyPressEvent(QKeyEvent *event)
 
 void GameWindow::drawTriangles()
 {
+    //    glEnable(GL_TEXTURE_2D);
+    //    glBindTexture(GL_TEXTURE_2D, textureId);
 
+    glColor3f(1, 1, 1);
     glMaterialf(GL_FRONT, GL_SHININESS, 100.0);
 
-    int countX = m_image.width();
-    int countY = m_image.height();
-    int count = countX * countY * 3 * 2 + countX * 3 + 3;
-    glBegin(GL_TRIANGLE_STRIP);
-#pragma omp for schedule(dynamic)
-    for (int var = 0; var < count - 9; var += 3) {
-        if(vertices[var + 2] < 0.08) {
-            glColor3f(vertices[var + 2] + drought->getYellow(), 0.4, 0);
-        } else if (vertices[var + 2] > 0.08 && vertices[var + 2] < 0.15 + drought->getSnowHeightModifier()) {
-            glColor3f(0.54, 0.27 + vertices[var + 2], 0.07);
-        } else {
-            glColor3f(0.9, 0.8, 0.9);
-        }
-        glNormal3f(normals[var / 3]->x, normals[var / 3]->y, normals[var / 3]->z);
-        glVertex3f(vertices[var], vertices[var + 1], vertices[var + 2]);
-    }
-    glEnd();
+    glEnableClientState(GL_VERTEX_ARRAY);
+    glEnableClientState(GL_NORMAL_ARRAY);
+    glEnableClientState(GL_COLOR_ARRAY);
+    glVertexPointer(3, GL_FLOAT, 0, verticesArray.constData());
+    glNormalPointer(GL_FLOAT, 0, normalsArray.constData());
+    glColorPointer(3, GL_FLOAT, 0, colorsArray.constData());
+    glDrawArrays(GL_TRIANGLES, 0, verticesArray.size());
+    glDisableClientState(GL_VERTEX_ARRAY);
+    glDisableClientState(GL_NORMAL_ARRAY);
+
+    //    glDisable(GL_TEXTURE_2D);
 }
 
 void GameWindow::drawNormals()
 {
     if(displayNormals) {
         glColor3f(1, 0, 0);
-        int countX = m_image.width();
-        int countY = m_image.height();
-        int count = countX * countY * 3 * 2 + countX * 3 + 3;
         glBegin(GL_LINES);
-        float n = 0.01;
-#pragma omp for schedule(dynamic)
-        for (int var = 0; var < count - 9; var += 3) {
-
-            glVertex3f(vertices[var], vertices[var + 1], vertices[var + 2]);
-            glVertex3f((vertices[var] + normals[var / 3]->x*n),
-                    (vertices[var + 1] + normals[var / 3]->y*n),
-                    (vertices[var + 2] + normals[var / 3]->z*n));
+        float x = 0.1;
+        for (int i = 0; i < normalsArray.size(); i += 9) {
+            QVector3D n = normalsArray[i];
+            QVector3D v = verticesArray[i];
+            glVertex3f(v.x(), v.y(), v.z());
+            glVertex3f(v.x() + n.x() * x, v.y() + n.y() * x, v.z() + n.z() * x);
         }
         glEnd();
     }
@@ -304,61 +308,68 @@ void GameWindow::load()
 
 GLfloat *GameWindow::initVertices(GLint countX, GLint countY)
 {
-    int count = countX * countY * 3 * 2 + countX * 3 + 3;
-    GLfloat *array = new GLfloat[count];
     GLfloat stepX = 1.0 / (countX);
     GLfloat stepY = 1.0 / (countY);
-    int cpt = 0;
 
-    float posX = -0.5f;
-    float posY = -0.5f;
+    float posX;
+    float posY;
 
-    int flop = 1;
-#pragma omp for schedule(dynamic)
-    for (int i = 0; i < countX; ++i) {
-        for (int j = 0; j < countY; ++j) {
-            array[cpt++] = posX;
-            array[cpt++] = posY;
-            array[cpt++] = getRandomZ(posX, posY);
-
-            array[cpt++] = posX + stepX;
-            array[cpt++] = posY;
-            array[cpt++] = getRandomZ(posX + stepX, posY);
-
-            posY += stepY * flop;
+    std::function<QVector3D(QVector3D)> color = [](QVector3D v) {
+        if(v.z() < 0.08) {
+            return QVector3D(v.z(), 0.4, 0);
+        } else if(v.z() > 0.08 && v.z() < 0.15) {
+            return QVector3D(0.54, 0.27 + v.z(), 0.07);
+        } else {
+            return QVector3D(0.9, 0.8, 0.9);
         }
+    };
 
-        array[cpt++] = posX;
-        array[cpt++] = posY;
-        array[cpt++] = getRandomZ(posX, posY);
+    #pragma omp for schedule(dynamic)
+    for (int i = 0 ; i < countX - 1; ++i) {
+        for (int j = 0; j < countY - 1; ++j) {
+            posX = i * stepX - 0.5; posY = (j + 1) * stepY - 0.5;
+            QVector3D v2(posX,  posY, getRandomZ(posX, posY));
+            verticesArray.push_back(v2);
+            colorsArray.push_back(color(v2));
 
-        flop *= -1;
-        posX += stepX;
-    }
+            posX = i * stepX - 0.5; posY = j * stepY - 0.5;
+            QVector3D v1(posX,  posY, getRandomZ(posX, posY));
+            verticesArray.push_back(v1);
+            colorsArray.push_back(color(v1));
 
-    array[cpt++] = posX;
-    array[cpt++] = posY;
-    array[cpt++] = getRandomZ(posX, posY);
-#pragma omp for schedule(dynamic)
-    for (int var = 0; var < cpt - 9; var += 3) {
-        point p1, p2, p3;
-        p1.x = array[var+0]; p1.y = array[var+1]; p1.z = array[var+2];
-        p2.x = array[var+3]; p2.y = array[var+4]; p2.z = array[var+5];
-        p3.x = array[var+6]; p3.y = array[var+7]; p3.z = array[var+8];
-        std::vector<float> n;
-        point *p = new point();
-        n = Utils::getNormal(p1, p2, p3);
-        p->x = n[0]; p->y = n[1]; p->z = n[2];
+            posX = (i + 1) * stepX - 0.5; posY = j * stepY - 0.5;
+            QVector3D v3(posX,  posY, getRandomZ(posX, posY));
+            verticesArray.push_back(v3);
+            colorsArray.push_back(color(v3));
 
-        if(p->z < 0) {
-            p->x *= -1;
-            p->y *= -1;
-            p->z *= -1;
+            QVector3D n = QVector3D::normal(v3 - v1, v2 - v1);
+            normalsArray.push_back(n);
+            normalsArray.push_back(n);
+            normalsArray.push_back(n);
+
+            posX = i * stepX - 0.5; posY = (j + 1) * stepY - 0.5;
+            QVector3D v4(posX, posY, getRandomZ(posX, posY));
+            verticesArray.push_back(v4);
+            colorsArray.push_back(color(v4));
+
+            posX = (i + 1) * stepX - 0.5; posY = j * stepY - 0.5;
+            QVector3D v6(posX, posY, getRandomZ(posX, posY));
+            verticesArray.push_back(v6);
+            colorsArray.push_back(color(v6));
+
+            posX = (i + 1) * stepX - 0.5; posY = (j + 1) * stepY - 0.5;
+            QVector3D v5(posX, posY, getRandomZ(posX, posY));
+            verticesArray.push_back(v5);
+            colorsArray.push_back(color(v5));
+
+            QVector3D n1 = QVector3D::normal(v6 - v4, v5 - v4);
+            normalsArray.push_back(n1);
+            normalsArray.push_back(n1);
+            normalsArray.push_back(n1);
+
         }
-
-        normals.push_back(p);
     }
-    return array;
+    return 0;
 }
 
 QString GameWindow::serializeVertices() const

@@ -8,5 +8,7 @@
         <file>gull.ply</file>
         <file>EAGLE_3.ply</file>
         <file>galleon2.ply</file>
+        <file>grass.jpg</file>
+        <file>heightmap-3.png</file>
     </qresource>
 </RCC>
