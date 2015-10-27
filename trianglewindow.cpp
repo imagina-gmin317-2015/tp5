@@ -23,6 +23,14 @@ int maxP = 360;
 
 using namespace std;
 
+GLubyte Texture[16] =
+{
+    254,254,254,0xFF, 130,196,108,0xFF,
+    148,127,96,0xFF, 49,140,231,0xFF
+};
+
+GLuint Name;
+
 TriangleWindow::TriangleWindow()
 {
     nbTick = 0;
@@ -134,6 +142,17 @@ void TriangleWindow::initialize()
     glLightfv(GL_LIGHT0, GL_DIFFUSE, diffuseLight);
     glLightfv(GL_LIGHT0, GL_SPECULAR, specularLight);
     glLightfv(GL_LIGHT0, GL_POSITION, position);
+
+    // Textures
+    glEnable(GL_TEXTURE_2D);
+    glGenTextures(1,&Name);
+    glBindTexture(GL_TEXTURE_2D,Name);
+    glTexImage2D(GL_TEXTURE_2D,0,4,2,2,0,GL_RGBA,GL_UNSIGNED_BYTE,Texture);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glHint(GL_PERSPECTIVE_CORRECTION_HINT,GL_NICEST);
+
 
 
     loadMap(":/heightmap-1.png");
@@ -268,10 +287,10 @@ void TriangleWindow::render()
         displayPoints();
         break;
     }
-    /*if (season == 2)
+    if (season == 2)
         updateParticlesAut();
     else if (season == 3)
-        updateParticlesHiv();*/
+        updateParticlesHiv();
 
     for(int i=0;i<mods.size();i++){
         mods.at(i)->draw();
@@ -576,7 +595,7 @@ void TriangleWindow::displayLines()
 
 void TriangleWindow::displayTrianglesTexture()
 {
-    glColor3f(1.0f, 1.0f, 1.0f);
+    // glColor3f(1.0f, 1.0f, 1.0f);
     glBegin(GL_TRIANGLES);
     uint id = 0;
 
@@ -586,7 +605,7 @@ void TriangleWindow::displayTrianglesTexture()
         {
 
             id = i*m_image.width() +j;
-            displayColor(p[id].z);
+            //displayColor(p[id].z);
             glVertex3f(
                         p[id].x,
                         p[id].y,
@@ -632,21 +651,26 @@ void TriangleWindow::displayTrianglesTexture()
 
 void TriangleWindow::displayColor(float alt)
 {
+
     if (alt > 0.2)
     {
-        glColor3f(01.0f, 1.0f, 1.0f);
+        //glColor3f(01.0f, 1.0f, 1.0f);
+        glTexCoord2i(1,0);
     }
     else     if (alt > 0.1)
     {
-        glColor3f(alt, 1.0f, 1.0f);
+        //glColor3f(alt, 1.0f, 1.0f);
+        glTexCoord2i(1,0);
     }
     else     if (alt > 0.05f)
     {
-        glColor3f(01.0f, alt, alt);
+        //glColor3f(01.0f, alt, alt);
+        glTexCoord2i(1,0);
     }
     else
     {
-        glColor3f(0.0f, 0.0f, 1.0f);
+        //glColor3f(0.0f, 0.0f, 1.0f);
+        glTexCoord2i(1,0);
     }
 
 }
