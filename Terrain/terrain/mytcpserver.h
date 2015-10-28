@@ -8,13 +8,11 @@
 
 #include <QTimer>
 
-#include "camera.h"
-
 class MyTcpServer : public QObject
 {
     Q_OBJECT
 public:
-    explicit MyTcpServer(Camera* cam);
+    explicit MyTcpServer();
     void start(int timeBetweenSeason);
 
 signals:
@@ -22,17 +20,15 @@ signals:
 public slots:
     void newConnection();
     void sendSeason();
-    void saveGame();
 
 private:
-    Camera* camera;
 
     QTcpServer* server;
     QTcpSocket* clients[4];
     int id;
     int season;
 
-    QTimer* timer, *saveTimer;
+    QTimer* timer;
 };
 
 #endif // MYTCPSERVER_H
