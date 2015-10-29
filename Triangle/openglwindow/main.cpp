@@ -5,7 +5,6 @@
 #include <QtCore/qmath.h>
 
 #include "trianglewindow.h"
-#include "terrain.h"
 
 int main(int argc, char **argv)
 {
@@ -20,14 +19,6 @@ int main(int argc, char **argv)
     window.show();
 
     window.setAnimating(true);
-
-    /*Terrain terrain("./heightmap-1.png", app);
-
-    terrain.setFormat(format);
-    terrain.resize(640, 480);
-    terrain.show();
-
-    terrain.setAnimating(true);*/
 
     return app->exec();
 }

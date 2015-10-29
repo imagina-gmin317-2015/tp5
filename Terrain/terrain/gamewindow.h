@@ -50,10 +50,9 @@ public:
 
     void doConnect();
 
-    void updateTerrainColor();
-
 private:
     void updateEnumSaison();
+    void updateTerrainColor();
 
     void openImage(QString str);
     void createTerrain();

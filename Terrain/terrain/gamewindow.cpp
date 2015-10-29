@@ -29,7 +29,7 @@ struct VertexData
     QVector3D normal;
 };
 
-static float xDir = 1, zDir = 1;                    // lightDir en X et Z
+static float xDir = 1, zDir = 1;                    //Orientation de la lumière directionnelle en X et Z
 static QVector3D direction;                         //vecteur direction de la caméra
 static QVector3D droite;                            //vecteur droite perpendiculaire au vecteur direction de la caméra
 static QVector3D up;                                //vecteur indiquant le haut pour la caméra
@@ -292,6 +292,10 @@ void GameWindow::createTerrain(){
 }
 
 void GameWindow::displayTerrain(){
+    if(arrayBuf.size() <= 0){
+        qDebug() << "here";
+        return;
+    }
 
     // Tell OpenGL which VBOs to use
     arrayBuf.bind();
@@ -652,6 +656,7 @@ void GameWindow::updateEnumSaison()
         saison = Saison::HIVER;
     }
 
+    //Ne fonctionne pas
     //updateTerrainColor();
 }
 
@@ -661,7 +666,16 @@ void GameWindow::updateTerrainColor(){
 
     for(int i = 0 ; i < terrain_height ; i++){
         for(int j = 0 ; j < terrain_width ; j++){
-            if(saison == Saison::ETE){
+            if(saison == Saison::PRINTEMPS){
+                if(hauteur[index] < 85){
+                    vertices[index].color = QVector3D(0.f,0.5f,0.f);
+                }else if(hauteur[index] < 170){
+                    vertices[index].color = QVector3D(0.33f,0.15f,0.f);
+                }else{
+                    vertices[index].color = QVector3D(1.f,1.f,1.f);
+                }
+            }
+            else if(saison == Saison::ETE){
                 if(hauteur[index] < 85){
                     vertices[index].color = QVector3D(0.f,0.8f,0.f);
                 }else{
@@ -679,8 +693,8 @@ void GameWindow::updateTerrainColor(){
             index++;
         }
     }
-
-    arrayBuf.allocate(vertices, terrain_width * terrain_height * sizeof(VertexData));
+    size_t bufSize = terrain_width * terrain_height * sizeof(VertexData);
+    arrayBuf.write(0, vertices, bufSize);
 }
 
 /** SLOTS **/
