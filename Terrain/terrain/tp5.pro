@@ -1,15 +1,11 @@
 INCLUDEPATH += $$PWD
 SOURCES += $$PWD/openglwindow.cpp \
     gamewindow.cpp \
-    mytcpserver.cpp \
-    texture.cpp \
-    tga.cpp
+    mytcpserver.cpp
 HEADERS += $$PWD/openglwindow.h \
     gamewindow.h \
     mytcpserver.h \
-    commonstruct.h \
-    texture.h \
-    tga.h
+    commonstruct.h
 
 SOURCES += \
     main.cpp

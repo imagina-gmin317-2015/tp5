@@ -13,6 +13,6 @@ void main() {
     normal = normalAttr;
 
     col = colAttr;
-    texCoord = texAttr;
+    texCoord = texAttr * gl_MultiTexCoord0;
     gl_Position = matrix * posAttr;
 }

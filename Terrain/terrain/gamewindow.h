@@ -3,7 +3,6 @@
 
 #include "openglwindow.h"
 #include "commonstruct.h"
-#include "texture.h"
 
 #include <QTcpSocket>
 #include <QAbstractSocket>
@@ -50,6 +49,8 @@ public:
     void displayParticles();
 
     void doConnect();
+
+    void updateTerrainColor();
 
 private:
     void updateEnumSaison();

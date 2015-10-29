@@ -29,11 +29,11 @@ struct VertexData
     QVector3D normal;
 };
 
+static float xDir = 1, zDir = 1;                    // lightDir en X et Z
 static QVector3D direction;                         //vecteur direction de la caméra
 static QVector3D droite;                            //vecteur droite perpendiculaire au vecteur direction de la caméra
 static QVector3D up;                                //vecteur indiquant le haut pour la caméra
 static QVector3D pos = QVector3D(0,0,-20);          //position camera
-static bool animate = true;                         //permet de savoir si on anime les terrain des différentes fenêtre GameWindow en les faisant tourner selon l'axe y
 
 /**
  * @brief GameWindow::GameWindow, constructeur de la classe GameWindow.
@@ -138,8 +138,8 @@ void GameWindow::initialize()
     createTerrain();
     createParticles();
 
-    // Load cube.png image
-    /*texture = new QOpenGLTexture(QImage(":/grass.png").mirrored());
+    // Load grass.jpg image
+    /*texture = new QOpenGLTexture(QImage(":/grass.jpg").mirrored());
     // Set nearest filtering mode for texture minification
     texture->setMinificationFilter(QOpenGLTexture::Nearest);
     // Set bilinear filtering mode for texture magnification
@@ -177,11 +177,13 @@ void GameWindow::render()
     matrix.perspective(60.0f, 16.0f/9.0f, 0.1f, 200.0f);
     matrix.lookAt(pos, pos+direction, up);
 
+    glBindTexture(GL_TEXTURE_2D, m_texture_location);
+
     m_program->setUniformValue(m_matrixUniform, matrix);
     m_program->setUniformValue(m_program->uniformLocation("tex"), m_texture_location);
+    m_program->setUniformValue(m_program->uniformLocation("lightDir"), QVector3D(xDir,-1,zDir));
 
     if(heightmap.depth() != 0){
-        glBindTexture(GL_TEXTURE_2D, m_texture_location);
         displayTerrain();
     }
 
@@ -240,8 +242,24 @@ void GameWindow::createTerrain(){
             }
 
             vertices[index].texCoord = QVector2D(x * j, y * i);
-            vertices[index].normal = QVector3D(rand(), rand(), rand());
+            index++;
+        }
+    }
 
+    index = 0;
+
+    for(int i = 0 ; i < terrain_height ; i++){
+        for(int j = 0 ; j < terrain_width ; j++){
+            if(j == terrain_width - 1){
+                vertices[index].normal = vertices[index-1].normal;
+            }
+            else if(i == terrain_height - 1){
+                vertices[index].normal = vertices[index - terrain_width].normal;
+            }else{
+                vertices[index].normal = QVector3D::normal(vertices[index].position, vertices[index+1].position, vertices[index + terrain_width].position);
+            }
+            //Perturbation des normales
+            //vertices[index].normal = QVector3D(vertices[index].normal.x() + rand(), vertices[index].normal.y() + rand(), vertices[index].normal.z() + rand());
             index++;
         }
     }
@@ -271,8 +289,6 @@ void GameWindow::createTerrain(){
     // Transfer index data to VBO 1
     indexBuf.bind();
     indexBuf.allocate(indices, (terrain_width-1)*(terrain_height-1)*6 * sizeof(GLushort));
-
-    delete hauteur;
 }
 
 void GameWindow::displayTerrain(){
@@ -340,26 +356,64 @@ bool GameWindow::event(QEvent *event)
  */
 void GameWindow::keyPressEvent(QKeyEvent *event)
 {
+    float speed = 1.f;
+
     switch(event->key())
     {
-    case 'C':
-        animate = !animate;
+    case Qt::Key_Z:
+        pos += direction * speed;
         break;
-    case 'P':
+    case Qt::Key_S:
+        pos -= direction * speed;
+        break;
+    case Qt::Key_Q:
+        pos -= droite * speed;
+        break;
+    case Qt::Key_D:
+        pos += droite * speed;
+        break;
+    case Qt::Key_Up:
+        pos.setY(pos.y() + speed);
+        break;
+    case Qt::Key_Down:
+        pos.setY(pos.y() - speed);
+        break;
+    case Qt::Key_4:
+        xDir--;
+        break;
+    case Qt::Key_6:
+        xDir++;
+        break;
+    case Qt::Key_5:
+        zDir--;
+        break;
+    case Qt::Key_8:
+        zDir++;
+        break;
+    case Qt::Key_P:
         m_refresh_rate *= 2;
         if(m_refresh_rate > 120)
             m_refresh_rate = 120;
 
         restartTimer();
         break;
-    case 'M':
+    case Qt::Key_M:
         m_refresh_rate /= 2;
         if(m_refresh_rate < 1)
             m_refresh_rate = 1;
 
         restartTimer();
         break;
-    case 'X':
+
+    case Qt::Key_W:
+        wireframe = !wireframe;
+        if(wireframe){
+            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+        }else{
+            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+        }
+        break;
+    case Qt::Key_X:
         carte ++;
         if(carte > 2)
             carte = 1;
@@ -370,30 +424,6 @@ void GameWindow::keyPressEvent(QKeyEvent *event)
         openImage(depth);
         createTerrain();
         break;
-    }
-
-    float speed = 1.f;
-    if(event->key() == Qt::Key_Z){
-        pos += direction * speed;
-    }if(event->key() == Qt::Key_S){
-        pos -= direction * speed;
-    }if(event->key() == Qt::Key_Q){
-        pos -= droite * speed;
-    }if(event->key() == Qt::Key_D){
-        pos += droite * speed;
-    }if(event->key() == Qt::Key_Up){
-        pos.setY(pos.y() + speed);
-    }if(event->key() == Qt::Key_Down){
-        pos.setY(pos.y() - speed);
-    }
-
-    if(event->key() == Qt::Key_W){
-        wireframe = !wireframe;
-        if(wireframe){
-            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-        }else{
-            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-        }
     }
 }
 
@@ -549,7 +579,7 @@ particles GameWindow::newParticle(){
     id = rand_z * terrain_width + rand_x;
 
     part.x = vertices[id].position.x();
-    part.y = 255 / 10.f;
+    part.y = (rand() % 255 + 200) / 10.f;
     part.z = vertices[id].position.z();
     part.min_y = vertices[id].position.y();
     part.falling_speed = (rand() % 10 + 1) / 10.f;
@@ -621,6 +651,36 @@ void GameWindow::updateEnumSaison()
     }else if(season == "HIVER"){
         saison = Saison::HIVER;
     }
+
+    //updateTerrainColor();
+}
+
+void GameWindow::updateTerrainColor(){
+
+    int index = 0;
+
+    for(int i = 0 ; i < terrain_height ; i++){
+        for(int j = 0 ; j < terrain_width ; j++){
+            if(saison == Saison::ETE){
+                if(hauteur[index] < 85){
+                    vertices[index].color = QVector3D(0.f,0.8f,0.f);
+                }else{
+                    vertices[index].color = QVector3D(0.33f,0.15f,0.f);
+                }
+            }else if(saison == Saison::AUTOMNE){
+                if(hauteur[index] < 170){
+                    vertices[index].color = QVector3D(0.33f,0.15f,0.f);
+                }else{
+                    vertices[index].color = QVector3D(1.f,1.f,1.f);
+                }
+            }else if(saison == Saison::HIVER){
+                vertices[index].color = QVector3D(1.f,1.f,1.f);
+            }
+            index++;
+        }
+    }
+
+    arrayBuf.allocate(vertices, terrain_width * terrain_height * sizeof(VertexData));
 }
 
 /** SLOTS **/

@@ -4,7 +4,6 @@
         <file>heightmap-2.png</file>
         <file>fshader.glsl</file>
         <file>vshader.glsl</file>
-        <file>grass.png</file>
         <file>grass.jpg</file>
     </qresource>
 </RCC>
