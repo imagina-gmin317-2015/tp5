@@ -1,0 +1,9 @@
+<RCC>
+    <qresource prefix="/">
+        <file>heightmap-1.png</file>
+        <file>heightmap-2.png</file>
+        <file>fshader.glsl</file>
+        <file>vshader.glsl</file>
+        <file>grass.jpg</file>
+    </qresource>
+</RCC>

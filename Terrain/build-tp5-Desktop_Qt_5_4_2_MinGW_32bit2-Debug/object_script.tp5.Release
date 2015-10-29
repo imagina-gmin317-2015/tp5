@@ -1,0 +1,12 @@
+INPUT(
+./release\openglwindow.o
+./release\gamewindow.o
+./release\mytcpserver.o
+./release\gameobject.o
+./release\texture.o
+./release\tga.o
+./release\main.o
+./release\qrc_gestionnaire.o
+./release\moc_openglwindow.o
+./release\moc_mytcpserver.o
+);
