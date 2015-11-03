@@ -71,29 +71,29 @@ int main(int argc, char **argv)
     QObject::connect(&window, SIGNAL(requestLoad()), g, SLOT(onLoadRequest()));
     QObject::connect(&window, SIGNAL(requestSave()), g, SLOT(onSaveRequest()));
 
-    g = createWindow(c, 1.0f / 60.0f);
-    g->setPosition(640, 10);
+//    g = createWindow(c, 1.0f / 60.0f);
+//    g->setPosition(640, 10);
 
-    QObject::connect(g, SIGNAL(requestLoad()), &window, SLOT(onLoadRequest()));
-    QObject::connect(g, SIGNAL(requestSave()), &window, SLOT(onSaveRequest()));
-    QObject::connect(&window, SIGNAL(requestLoad()), g, SLOT(onLoadRequest()));
-    QObject::connect(&window, SIGNAL(requestSave()), g, SLOT(onSaveRequest()));
+//    QObject::connect(g, SIGNAL(requestLoad()), &window, SLOT(onLoadRequest()));
+//    QObject::connect(g, SIGNAL(requestSave()), &window, SLOT(onSaveRequest()));
+//    QObject::connect(&window, SIGNAL(requestLoad()), g, SLOT(onLoadRequest()));
+//    QObject::connect(&window, SIGNAL(requestSave()), g, SLOT(onSaveRequest()));
 
-    g = createWindow(c, 1.0f / 60.0f);
-    g->setPosition(640, 400);
+//    g = createWindow(c, 1.0f / 60.0f);
+//    g->setPosition(640, 400);
 
-    QObject::connect(g, SIGNAL(requestLoad()), &window, SLOT(onLoadRequest()));
-    QObject::connect(g, SIGNAL(requestSave()), &window, SLOT(onSaveRequest()));
-    QObject::connect(&window, SIGNAL(requestLoad()), g, SLOT(onLoadRequest()));
-    QObject::connect(&window, SIGNAL(requestSave()), g, SLOT(onSaveRequest()));
+//    QObject::connect(g, SIGNAL(requestLoad()), &window, SLOT(onLoadRequest()));
+//    QObject::connect(g, SIGNAL(requestSave()), &window, SLOT(onSaveRequest()));
+//    QObject::connect(&window, SIGNAL(requestLoad()), g, SLOT(onLoadRequest()));
+//    QObject::connect(&window, SIGNAL(requestSave()), g, SLOT(onSaveRequest()));
 
-    g = createWindow(c, 1.0f / 60.0f);
-    g->setPosition(120, 400);
+//    g = createWindow(c, 1.0f / 60.0f);
+//    g->setPosition(120, 400);
 
-    QObject::connect(g, SIGNAL(requestLoad()), &window, SLOT(onLoadRequest()));
-    QObject::connect(g, SIGNAL(requestSave()), &window, SLOT(onSaveRequest()));
-    QObject::connect(&window, SIGNAL(requestLoad()), g, SLOT(onLoadRequest()));
-    QObject::connect(&window, SIGNAL(requestSave()), g, SLOT(onSaveRequest()));
+//    QObject::connect(g, SIGNAL(requestLoad()), &window, SLOT(onLoadRequest()));
+//    QObject::connect(g, SIGNAL(requestSave()), &window, SLOT(onSaveRequest()));
+//    QObject::connect(&window, SIGNAL(requestLoad()), g, SLOT(onLoadRequest()));
+//    QObject::connect(&window, SIGNAL(requestSave()), g, SLOT(onSaveRequest()));
 
     return app.exec();
 }

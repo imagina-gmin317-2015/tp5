@@ -25,7 +25,26 @@ PlyEntity *PlyEntity::copy(PlyEntity *entity)
     newEntity->normalsArray = entity->normalsArray;
     newEntity->colorsArray = entity->colorsArray;
     newEntity->scaledVerticesArray = entity->scaledVerticesArray;
+    newEntity->init();
     return newEntity;
+}
+
+void PlyEntity::init()
+{
+    m_vertexbuffer.create();
+    m_vertexbuffer.bind();
+    m_vertexbuffer.allocate(vertices.constData(), vertices.size() * sizeof(QVector3D));
+    m_vertexbuffer.release();
+
+    m_normalbuffer.create();
+    m_normalbuffer.bind();
+    m_normalbuffer.allocate(normalsArray.constData(), normalsArray.size() * sizeof(QVector3D));
+    m_normalbuffer.release();
+
+    m_colorbuffer.create();
+    m_colorbuffer.bind();
+    m_colorbuffer.allocate(colorsArray.constData(), colorsArray.size() * sizeof(QVector3D));
+    m_colorbuffer.release();
 }
 
 void PlyEntity::draw(float delta)
@@ -37,29 +56,20 @@ void PlyEntity::draw(float delta)
     glEnableClientState(GL_VERTEX_ARRAY);
     glEnableClientState(GL_NORMAL_ARRAY);
     glEnableClientState(GL_COLOR_ARRAY);
-    glVertexPointer(3, GL_FLOAT, 0, scaledVerticesArray.constData());
-    glNormalPointer(GL_FLOAT, 0, normalsArray.constData());
-    glColorPointer(3, GL_FLOAT, 0, colorsArray.constData());
+    m_vertexbuffer.bind();
+    glVertexPointer(3, GL_FLOAT, 0, NULL);
+    m_vertexbuffer.release();
+    m_normalbuffer.bind();
+    glNormalPointer(GL_FLOAT, 0, NULL);
+    m_normalbuffer.release();
+    m_colorbuffer.bind();
+    glColorPointer(3, GL_FLOAT, 0, NULL);
+    m_colorbuffer.release();
     glDrawArrays(GL_TRIANGLES, 0, verticesArray.size());
-    glDisableClientState(GL_VERTEX_ARRAY);
-    glDisableClientState(GL_NORMAL_ARRAY);
     glDisableClientState(GL_COLOR_ARRAY);
+    glDisableClientState(GL_NORMAL_ARRAY);
+    glDisableClientState(GL_VERTEX_ARRAY);
 
-    //            glBegin(GL_TRIANGLES);
-    //            for (int i = 0; i < indexes.size(); ++i) {
-    //                QVector<int> v = indexes[i];
-    //        #pragma omp for schedule(dynamic)
-    //                for (int j = 0; j < v.size(); ++j) {
-    //                    point p = vertices[v[j] * 3];
-    //                    point n = vertices[v[j] * 3 + 1];
-    //                    point c = vertices[v[j] * 3 + 2];
-    //                    glColor3f(c.x, c.y, c.z);
-    //                    glNormal3f(n.y, n.z, n.x);
-    //                    glVertex3f(p.x * scale, p.y * scale, p.z * scale);
-    //                }
-
-    //            }
-    //            glEnd();
     glPopMatrix();
 }
 
@@ -76,13 +86,15 @@ void PlyEntity::setPosition(float x, float y, float z)
 void PlyEntity::setScale(float scale)
 {
     this->scale = scale;
-
+//    scaledVerticesArray.clear();
     for (int i = 0; i < verticesArray.size(); ++i) {
         QVector3D v = verticesArray[i];
         v *= scale;
         scaledVerticesArray.push_back(v);
     }
-
+    m_vertexbuffer.bind();
+    m_vertexbuffer.write(0, scaledVerticesArray.constData(), scaledVerticesArray.size() * sizeof(QVector3D));
+    m_vertexbuffer.release();
 }
 
 void PlyEntity::setAngle(float angle)
@@ -213,6 +225,7 @@ PlyEntity::PlyEntity(QStringList list)
             colorsArray.push_back(c3d);
         }
     }
+    this->init();
     qDebug() << "vertices array = " << verticesArray.size();
     qDebug() << "normals array = " << normalsArray.size();
     qDebug() << "colors array = " << colorsArray.size();

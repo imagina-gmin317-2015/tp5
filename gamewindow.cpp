@@ -57,7 +57,7 @@ void GameWindow::initialize()
     glDepthFunc(GL_LESS);
     glEnable(GL_COLOR_MATERIAL);
     glEnable(GL_CULL_FACE);
-    glEnable(GL_TEXTURE_2D);
+//    glEnable(GL_TEXTURE_2D);
     glEnable (GL_BLEND);
     glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);	// Active la correction de perspective (pour ombrage, texture, ...)
@@ -71,7 +71,7 @@ void GameWindow::initialize()
     this->onSeasonChange();
     this->displayNormals = false;
 
-    QImage image(":/grass.jpg");
+    QImage image(":/heightmap-4.png");
 
     glGenTextures(1, &textureId);
     glBindTexture(GL_TEXTURE_2D, textureId);
@@ -80,6 +80,25 @@ void GameWindow::initialize()
     glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
     glBindTexture( GL_TEXTURE_2D, 0 );
 
+    m_vertexbuffer.create();
+    m_vertexbuffer.bind();
+    m_vertexbuffer.allocate(verticesArray.constData(), verticesArray.size() * sizeof(QVector3D));
+    m_vertexbuffer.release();
+
+    m_normalbuffer.create();
+    m_normalbuffer.bind();
+    m_normalbuffer.allocate(normalsArray.constData(), normalsArray.size() * sizeof(QVector3D));
+    m_normalbuffer.release();
+
+    m_colorbuffer.create();
+    m_colorbuffer.bind();
+    m_colorbuffer.allocate(colorsArray.constData(), colorsArray.size() * sizeof(QVector3D));
+    m_colorbuffer.release();
+
+    shader = new QOpenGLShaderProgram();
+    shader->addShaderFromSourceFile(QOpenGLShader::Vertex, ":/vertex.glsl");
+    shader->addShaderFromSourceFile(QOpenGLShader::Fragment, ":/fragment.glsl");
+    qDebug() << "linked = " << shader->link();
 }
 
 void GameWindow::onSeasonChange()
@@ -139,10 +158,14 @@ void GameWindow::render(float delta)
     glEnable(GL_LIGHT0);
 
     // Create light components
-    GLfloat ambientLight[] = { 0.2f, 0.2f, 0.2f, 1.0f };
+    GLfloat ambientLight[] = { 1.1f, 1.5f, 0.7f, 1.0f };
     GLfloat diffuseLight[] = { 0.8f, 0.8f, 0.8, 1.0f };
     GLfloat specularLight[] = { 0.5f, 0.5f, 0.5f, 1.0f };
     GLfloat position[] = { -0.5f, 0.5f, 4.0f, 0.0f };
+
+    shader->bind();
+    shader->setUniformValueArray("light_direction", position, 1, 4);
+    shader->release();
 
     // Assign created components to GL_LIGHT0
     glLightfv(GL_LIGHT0, GL_AMBIENT, ambientLight);
@@ -203,7 +226,6 @@ void GameWindow::keyPressEvent(QKeyEvent *event)
     case Qt::Key_Escape:
         cursorCaptured = false;
         this->setCursor(*cursor2);
-        //        qApp->exit();
         break;
     case Qt::Key_Tab:
         qApp->exit();
@@ -243,23 +265,28 @@ void GameWindow::keyPressEvent(QKeyEvent *event)
 
 void GameWindow::drawTriangles()
 {
-    //    glEnable(GL_TEXTURE_2D);
-    //    glBindTexture(GL_TEXTURE_2D, textureId);
+    shader->bind();
 
-    glColor3f(1, 1, 1);
     glMaterialf(GL_FRONT, GL_SHININESS, 100.0);
 
     glEnableClientState(GL_VERTEX_ARRAY);
     glEnableClientState(GL_NORMAL_ARRAY);
     glEnableClientState(GL_COLOR_ARRAY);
-    glVertexPointer(3, GL_FLOAT, 0, verticesArray.constData());
-    glNormalPointer(GL_FLOAT, 0, normalsArray.constData());
-    glColorPointer(3, GL_FLOAT, 0, colorsArray.constData());
+    m_vertexbuffer.bind();
+    glVertexPointer(3, GL_FLOAT, 0, NULL);
+    m_vertexbuffer.release();
+    m_normalbuffer.bind();
+    glNormalPointer(GL_FLOAT, 0, NULL);
+    m_normalbuffer.release();
+    m_colorbuffer.bind();
+    glColorPointer(3, GL_FLOAT, 0, NULL);
+    m_colorbuffer.release();
     glDrawArrays(GL_TRIANGLES, 0, verticesArray.size());
-    glDisableClientState(GL_VERTEX_ARRAY);
+    glDisableClientState(GL_COLOR_ARRAY);
     glDisableClientState(GL_NORMAL_ARRAY);
+    glDisableClientState(GL_VERTEX_ARRAY);
 
-    //    glDisable(GL_TEXTURE_2D);
+    shader->release();
 }
 
 void GameWindow::drawNormals()
@@ -267,8 +294,8 @@ void GameWindow::drawNormals()
     if(displayNormals) {
         glColor3f(1, 0, 0);
         glBegin(GL_LINES);
-        float x = 0.1;
-        for (int i = 0; i < normalsArray.size(); i += 9) {
+        float x = 0.01;
+        for (int i = 0; i < normalsArray.size(); i += 1) {
             QVector3D n = normalsArray[i];
             QVector3D v = verticesArray[i];
             glVertex3f(v.x(), v.y(), v.z());
@@ -324,7 +351,7 @@ GLfloat *GameWindow::initVertices(GLint countX, GLint countY)
         }
     };
 
-    #pragma omp for schedule(dynamic)
+#pragma omp for schedule(dynamic)
     for (int i = 0 ; i < countX - 1; ++i) {
         for (int j = 0; j < countY - 1; ++j) {
             posX = i * stepX - 0.5; posY = (j + 1) * stepY - 0.5;
@@ -369,6 +396,11 @@ GLfloat *GameWindow::initVertices(GLint countX, GLint countY)
 
         }
     }
+
+    //    for (int i = 0; i < verticesArray.size(); ++i) {
+    //        verticesArray[i].setZ(0);
+    //    }
+
     return 0;
 }
 

@@ -1,10 +1,13 @@
 #ifndef GAMEWINDOW_H
 #define GAMEWINDOW_H
 
-#include "openglwindow.h"
 #include <QCursor>
 #include "QTimer"
+#include <QOpenGLShaderProgram>
+#include <QOpenGLBuffer>
+
 #include "camera.h"
+#include "openglwindow.h"
 #include "clientthread.h"
 #include "serverthread.h"
 #include "snowparticles.h"
@@ -75,6 +78,13 @@ private:
     QVector<QVector3D> verticesArray;
     QVector<QVector3D> normalsArray;
     QVector<QVector3D> colorsArray;
+
+    QOpenGLBuffer m_vertexbuffer;
+    QOpenGLBuffer m_normalbuffer;
+    QOpenGLBuffer m_colorbuffer;
+
+    QOpenGLShaderProgram *shader;
+    int colorsShaderId;
 
     GLfloat* vertices;
     std::vector<point*> normals;

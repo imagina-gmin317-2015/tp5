@@ -8,6 +8,7 @@
 #include <QFile>
 #include <QDebug>
 #include <QtGui/QOpenGLFunctions>
+#include <QOpenGLBuffer>
 
 #include <iostream>
 
@@ -18,6 +19,8 @@ class PlyEntity
 public:
     static PlyEntity *load(QString filePath);
     static PlyEntity *copy(PlyEntity *entity);
+
+    void init();
     void draw(float delta);
     void update(float delta);
     void setPosition(float x, float y, float z);
@@ -41,6 +44,10 @@ private:
     QVector<QVector3D> verticesArray, scaledVerticesArray;
     QVector<QVector3D> normalsArray;
     QVector<QVector3D> colorsArray;
+
+    QOpenGLBuffer m_vertexbuffer;
+    QOpenGLBuffer m_normalbuffer;
+    QOpenGLBuffer m_colorbuffer;
 };
 
 #endif // PLYENTITY_H

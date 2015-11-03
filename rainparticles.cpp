@@ -83,10 +83,6 @@ void RainParticles::draw(float delta)
             float LightDif[4] = {1,1,1.f,1.f};
             glLightfv(GL_LIGHT1,GL_DIFFUSE,LightDif);
 
-            //            glLightf(GL_LIGHT0, GL_CONSTANT_ATTENUATION, 2.0);
-            //            glLightf(GL_LIGHT0, GL_LINEAR_ATTENUATION, 1.0);
-            //            glLightf(GL_LIGHT1, GL_QUADRATIC_ATTENUATION, 3);
-
             glColor3f(1, 1, 1);
             glBegin(GL_LINE_STRIP);
             float f1, f2, f3;
@@ -100,6 +96,8 @@ void RainParticles::draw(float delta)
             //    glVertex3f(0.5, 0.5, 1);
             glEnd();
         } else {
+            float zero[4] = {0, 0, 0, 0};
+            glLightfv(GL_LIGHT1,GL_DIFFUSE,zero);
             glDisable(GL_LIGHT1);
         }
         this->galleon->draw();
