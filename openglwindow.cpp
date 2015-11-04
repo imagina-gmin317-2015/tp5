@@ -39,19 +39,20 @@
 ****************************************************************************/
 
 #include "openglwindow.h"
+
 #include <QtCore/QCoreApplication>
 
 #include <QtGui/QOpenGLContext>
 #include <QtGui/QOpenGLPaintDevice>
 #include <QtGui/QPainter>
-#include <iostream>
-using namespace std;
+#include <QDebug>
 
 //! [1]
 OpenGLWindow::OpenGLWindow(QWindow *parent)
     : QWindow(parent)
-
+    , m_update_pending(false)
     , m_context(0)
+    , m_animating(false)
     , m_device(0)
 {
     setSurfaceType(QWindow::OpenGLSurface);
@@ -83,6 +84,14 @@ void OpenGLWindow::render()
 
     QPainter painter(m_device);
     render(&painter);
+}
+
+void OpenGLWindow::renderLater()
+{
+    if (!m_update_pending) {
+        m_update_pending = true;
+        QCoreApplication::postEvent(this, new QEvent(QEvent::UpdateRequest));
+    }
 }
 
 bool OpenGLWindow::event(QEvent *event)
@@ -135,5 +144,13 @@ void OpenGLWindow::renderNow()
 
     m_context->swapBuffers(this);
 
+}
+
+void OpenGLWindow::setAnimating(bool animating)
+{
+    m_animating = animating;
+
+    if (animating)
+        renderLater();
 }
 

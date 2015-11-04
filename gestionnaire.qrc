@@ -2,6 +2,18 @@
     <qresource prefix="/">
         <file>heightmap-1.png</file>
         <file>heightmap-2.png</file>
-        <file>heightmap-3.png</file>                
+        <file>heightmap-3.png</file>
+        <file>bureau256.png</file>
+        <file>land.jpg</file>
+        <file>springtree.ply</file>
+        <file>summertree.ply</file>
+        <file>wintertree.ply</file>
+        <file>autumntree.ply</file>
+        <file>texture1.jpg</file>
+        <file>grass_texture.jpg</file>
+        <file>texture2.jpg</file>
+        <file>texture2_neg.png</file>
+        <file>texture3.png</file>
+        <file>texture3_neg.png</file>
     </qresource>
 </RCC>

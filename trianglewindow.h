@@ -2,70 +2,71 @@
 #define TRIANGLEWINDOW_H
 
 #include "openglwindow.h"
+#include "point.h"
+#include "particule.h"
 
-struct point
-{
-    float x, y ,z;
-};
+#include <QtGui/QOpenGLShaderProgram>
+#include <QtGui/QScreen>
+#include <QOpenGLTexture>
+#include <QOpenGLVertexArrayObject>
+#include <QOpenGLBuffer>
+#include <QVector>
+#include <iostream>
+#include <QFile>
+#include <QKeyEvent>
 
-class paramCamera
-{
-public:
-    float rotX = -45.0;
-    float rotY = -45.0;
-    float ss = 1.0f;
-    float anim = 0.0f;
-
-    int etat = 0;
-};
+#define MAX_PARTICULES 700
 
 class TriangleWindow : public OpenGLWindow
 {
-Q_OBJECT
-
 public:
     TriangleWindow();
-    TriangleWindow(int maj);
-    void initialize();
-    void render();
-    bool event(QEvent *event);
+    TriangleWindow(int, int);
 
-    void keyPressEvent(QKeyEvent *event);
-
-    void displayTriangles();
-    void displayLines();
-    void displayTrianglesC();
-    void displayPoints();
-    void displayTrianglesTexture();
-
-    void displayColor(float);
-
-    void loadMap(QString localPath);
-    void updateParticlesAut();
-    void updateParticlesHiv();
-    paramCamera* c;
-
-    void setSeason(int );
-
-public slots:
-    void updateSeason();
+    void initialize() Q_DECL_OVERRIDE;
+    void render() Q_DECL_OVERRIDE;
+    void keyPressEvent(QKeyEvent *keyEvent);
+    void generateTerrain();
 
 private:
-    int nbTick = 0;
-    int m_frame = 0;
-    int season, day;
-    point* particules;
-    bool master = false;
+    GLuint loadShader(GLenum type, const char *source);
 
-    QImage m_image;
-    point *p;
-    int carte=1;
-    int maj = 20;
+    GLuint m_posAttr;
+    GLuint m_colAttr;
+    GLuint m_texAttr;
+    GLuint m_texCoord;
+    GLuint m_matrixUniform;
 
-    QTimer *timer;
-    QTimer *timerFPS;
+    int _width;
+    int _height;
+    GLfloat _camX;
+    GLfloat _camY;
+    GLfloat _camZ;
+
+    bool _wireFrame;
+
+    QVector<GLfloat> _map;
+    QVector<GLfloat> _texture;
+    QVector<GLfloat> _color;
+    Point *p;
+
+    QOpenGLShaderProgram *m_program;
+    int m_frame;
+
+    QOpenGLTexture *texture;
+
+    // vao
+    QOpenGLVertexArrayObject vao;
+    QOpenGLBuffer vbo;
+    QOpenGLBuffer matVbo;
+
+    //seasons
+    QTimer *timerParticule;
+    QString *allSeasons;
+
+    int currentSeason;
+
+    Particule **particules;
 };
-
-
 
 #endif // TRIANGLEWINDOW_H
