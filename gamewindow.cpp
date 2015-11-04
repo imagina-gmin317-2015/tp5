@@ -71,18 +71,17 @@ void GameWindow::initialize()
     this->onSeasonChange();
     this->displayNormals = false;
 
-    QImage image(":/grass.jpg");
+    snowTexture = new QOpenGLTexture(QImage(":/snow.jpg"));
+    snowTexture->setMinificationFilter(QOpenGLTexture::LinearMipMapLinear);
+    snowTexture->setMagnificationFilter(QOpenGLTexture::Linear);
 
-    texture = new QOpenGLTexture(image);
-    texture->setMinificationFilter(QOpenGLTexture::LinearMipMapLinear);
-    texture->setMagnificationFilter(QOpenGLTexture::Linear);
+    rockTexture = new QOpenGLTexture(QImage(":/rock.jpg"));
+    rockTexture->setMinificationFilter(QOpenGLTexture::LinearMipMapLinear);
+    rockTexture->setMagnificationFilter(QOpenGLTexture::Linear);
 
-//    glGenTextures(1, &textureId);
-//    glBindTexture(GL_TEXTURE_2D, textureId);
-//    glTexImage2D(GL_TEXTURE_2D, 0, 3, image.width(), image.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, image.bits());
-//    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
-//    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
-//    glBindTexture( GL_TEXTURE_2D, 0 );
+    grassTexture = new QOpenGLTexture(QImage(":/grass.jpg"));
+    grassTexture->setMinificationFilter(QOpenGLTexture::LinearMipMapLinear);
+    grassTexture->setMagnificationFilter(QOpenGLTexture::Linear);
 
     m_vertexbuffer.create();
     m_vertexbuffer.bind();
@@ -162,7 +161,7 @@ void GameWindow::render(float delta)
     glEnable(GL_LIGHT0);
 
     // Create light components
-    GLfloat ambientLight[] = { 1.1f, 1.5f, 0.7f, 1.0f };
+    GLfloat ambientLight[] = { 0.2f, 0.2f, 0.2f, 1.0f };
     GLfloat diffuseLight[] = { 0.8f, 0.8f, 0.8, 1.0f };
     GLfloat specularLight[] = { 0.5f, 0.5f, 0.5f, 1.0f };
     GLfloat position[] = { -0.5f, 0.5f, 4.0f, 0.0f };
@@ -270,7 +269,18 @@ void GameWindow::keyPressEvent(QKeyEvent *event)
 void GameWindow::drawTriangles()
 {
     shader->bind();
-    texture->bind();
+    glActiveTexture(GL_TEXTURE0);
+    grassTexture->bind();
+
+    glActiveTexture(GL_TEXTURE1);
+    snowTexture->bind();
+
+    glActiveTexture(GL_TEXTURE2);
+    rockTexture->bind();
+
+    glUniform1i(glGetUniformLocation(shader->programId(), "grass"), 0);
+    glUniform1i(glGetUniformLocation(shader->programId(), "snow"), 1);
+    glUniform1i(glGetUniformLocation(shader->programId(), "rock"), 2);
 
     glMaterialf(GL_FRONT, GL_SHININESS, 100.0);
 
@@ -291,7 +301,9 @@ void GameWindow::drawTriangles()
     glDisableClientState(GL_NORMAL_ARRAY);
     glDisableClientState(GL_VERTEX_ARRAY);
 
-    texture->release();
+    rockTexture->release();
+    snowTexture->release();
+    grassTexture->release();
     shader->release();
 }
 
@@ -347,7 +359,7 @@ GLfloat *GameWindow::initVertices(GLint countX, GLint countY)
     float posX;
     float posY;
 
-    std::function<QVector3D(QVector3D)> color = [](QVector3D v) {
+    auto color = [](QVector3D v) {
         if(v.z() < 0.08) {
             return QVector3D(v.z(), 0.4, 0);
         } else if(v.z() > 0.08 && v.z() < 0.15) {

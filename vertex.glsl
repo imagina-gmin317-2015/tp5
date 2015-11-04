@@ -1,6 +1,7 @@
 varying vec4 col;
 varying vec3 N;
 varying vec3 V;
+varying vec4 pos;
 
 void main(void)
 {
@@ -8,6 +9,7 @@ void main(void)
     V = vec3(gl_ModelViewMatrix * gl_Vertex);       
     N = normalize(gl_NormalMatrix * gl_Normal);
     col = gl_Color;
-    gl_TexCoord[0] = gl_TextureMatrix[0] * gl_MultiTexCoord0;
+    // gl_TexCoord[0] = gl_TextureMatrix[0] * gl_MultiTexCoord0;
+    pos = gl_Vertex;
 }
 

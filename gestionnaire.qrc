@@ -13,5 +13,7 @@
         <file>heightmap-4.png</file>
         <file>fragment.glsl</file>
         <file>vertex.glsl</file>
+        <file>rock.jpg</file>
+        <file>snow.jpg</file>
     </qresource>
 </RCC>

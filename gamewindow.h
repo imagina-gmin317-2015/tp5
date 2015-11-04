@@ -84,7 +84,9 @@ private:
     QOpenGLBuffer m_normalbuffer;
     QOpenGLBuffer m_colorbuffer;
 
-    QOpenGLTexture *texture;
+    QOpenGLTexture *grassTexture;
+    QOpenGLTexture *rockTexture;
+    QOpenGLTexture *snowTexture;
 
     QOpenGLShaderProgram *shader;
     int colorsShaderId;
