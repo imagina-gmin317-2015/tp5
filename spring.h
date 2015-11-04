@@ -12,7 +12,7 @@ class Grass {
     friend class Pool<Grass *>;
 
 public:
-    float x, y, z, height;
+    float x = 0, y = 0, z = 0, height = 0;
     static Pool<Grass *> *pool;
     Grass *init(float x, float y, float z);
 
@@ -32,12 +32,12 @@ public:
     QVector<data *> attributes();
 
 private:
-    bool isActive;
+    bool isActive = false;
     QVector<Grass*> grass;
-    float windX, windY;
+    float windX = 0, windY = 0;
     QImage *image;
-    float elapsed;
-    float age;
+    float elapsed = 0;
+    float age = 0;
 
     Grass *initGrass(Grass *g);
 };

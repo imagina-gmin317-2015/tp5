@@ -6,6 +6,9 @@ Spring::Spring(QImage *image)
     this->image = image;
     this->elapsed = 0;
     this->age = 0;
+    this->windX = 0;
+    this->windY = 0;
+    this->isActive = false;
 }
 
 void Spring::update(float delta)
@@ -102,6 +105,7 @@ Grass *Spring::initGrass(Grass *g)
 
 Grass *Grass::init(float x, float y, float z)
 {
+    this->height = 0;
     this->x = x; this->y = y; this->z = z;
     return this;
 }

@@ -393,14 +393,8 @@ GLfloat *GameWindow::initVertices(GLint countX, GLint countY)
             normalsArray.push_back(n1);
             normalsArray.push_back(n1);
             normalsArray.push_back(n1);
-
         }
     }
-
-    //    for (int i = 0; i < verticesArray.size(); ++i) {
-    //        verticesArray[i].setZ(0);
-    //    }
-
     return 0;
 }
 
