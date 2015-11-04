@@ -32,17 +32,21 @@ void main (void)
       finalColor += Iamb + Idiff + Ispec;
    }
    
-   sampler2D s;
+   // sampler2D s;
+   vec4 c;
 
    if(col.b < 0.01) {
-     s = grass;
+     // s = grass;
+     c = texture2D(grass, vec2(pos.x + 0.5, pos.y + 0.5)) + col * 0.2;
    } else if (col.b > 0.01 && col.b < 0.5) {
-     s = rock;
+     // s = rock;
+     c = texture2D(rock, vec2(pos.x + 0.5, pos.y + 0.5)) + col * 0.2;
    } else {
-     s = snow;
+     // s = snow;
+     c = texture2D(snow, vec2(pos.x + 0.5, pos.y + 0.5)) + col * 0.2;
    }
 
-   vec4 c = texture2D(s, vec2(pos.x + 0.5, pos.y + 0.5)) + col * 0.2;
+   // vec4 c = texture2D(s, vec2(pos.x + 0.5, pos.y + 0.5)) + col * 0.2;
    // write Total Color: 
    gl_FragColor = (gl_FrontLightModelProduct.sceneColor + finalColor) * c; 
 }
