@@ -8,6 +8,7 @@
 #include <iostream>
 #include <QtGui/QOpenGLShaderProgram>
 #include <vector>
+#include <QOpenGLTexture>
 #include <QOpenGLBuffer>
 #include <QVector2D>
 
@@ -52,6 +53,7 @@ private:
     QOpenGLShaderProgram *shader;
     QVector<QVector2D> waterArray;
     QOpenGLBuffer waterBuffer;
+    QOpenGLTexture *texture;
 
     RainDrop *createRainDrops(RainDrop *s);
     void initWater();

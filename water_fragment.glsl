@@ -1,10 +1,12 @@
 varying vec3 N;
 varying vec3 V;
+varying vec4 pos;
+uniform sampler2D water;
 #define MAX_LIGHTS 3 
 
 void main (void) 
 { 
-   vec4 finalColor = vec4(0.0, 0.0, 1, 0.25);
+   vec4 finalColor = vec4(0.0, 0.0, 0.6, 1);
    
    for (int i=0;i<MAX_LIGHTS;i++)
    {
@@ -26,7 +28,13 @@ void main (void)
    
       finalColor += Iamb + Idiff + Ispec;
       finalColor *= 0.8;
-      finalColor.b = 1;
+      // finalColor.b = 1;
+      // finalColor.a = 0.7;
    }
-   gl_FragColor = vec4((gl_FrontLightModelProduct.sceneColor + finalColor).xyz, 0.5);
+
+   vec4 c = texture2D(water, vec2(pos.x + 0.5, pos.y + 0.5));
+   vec4 cc = vec4(finalColor + c);
+   cc.a = 0.5;
+
+   gl_FragColor = cc;
 }

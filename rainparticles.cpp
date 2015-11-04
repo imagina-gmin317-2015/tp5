@@ -16,6 +16,10 @@ RainParticles::RainParticles(QImage *image)
     shader->addShaderFromSourceFile(QOpenGLShader::Fragment, ":/water_fragment.glsl");
     qDebug() << "linked = " << shader->link();
 
+    texture = new QOpenGLTexture(QImage(":/water.jpg"));
+    texture->setMinificationFilter(QOpenGLTexture::LinearMipMapLinear);
+    texture->setMagnificationFilter(QOpenGLTexture::Linear);
+
     initWater();
 }
 
@@ -114,12 +118,14 @@ void RainParticles::draw(float delta)
         shader->bind();
         shader->setUniformValue("waterHeight", waterHeight);
         shader->setUniformValue("time", elapsed);
+        texture->bind();
         glEnableClientState(GL_VERTEX_ARRAY);
         waterBuffer.bind();
         glVertexPointer(2, GL_FLOAT, 0, NULL);
         waterBuffer.release();
         glDrawArrays(GL_QUADS, 0, waterArray.size());
         glDisableClientState(GL_VERTEX_ARRAY);
+        texture->release();
         shader->release();
     }
 }
