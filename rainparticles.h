@@ -8,6 +8,8 @@
 #include <iostream>
 #include <QtGui/QOpenGLShaderProgram>
 #include <vector>
+#include <QOpenGLBuffer>
+#include <QVector2D>
 
 #include "pool.cpp"
 #include "utils.h"
@@ -47,7 +49,12 @@ private:
     float lightningX, lightningY;
     Galleon *galleon;
 
+    QOpenGLShaderProgram *shader;
+    QVector<QVector2D> waterArray;
+    QOpenGLBuffer waterBuffer;
+
     RainDrop *createRainDrops(RainDrop *s);
+    void initWater();
 };
 
 #endif // RAINPARTICLES_H

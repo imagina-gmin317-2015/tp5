@@ -1,15 +1,10 @@
-varying vec4 col;
 varying vec3 N;
 varying vec3 V;
-uniform sampler2D grass;
-uniform sampler2D snow;
-uniform sampler2D rock;
-varying vec4 pos;
 #define MAX_LIGHTS 3 
 
 void main (void) 
 { 
-   vec4 finalColor = vec4(0.0, 0.0, 0.0, 0.0);
+   vec4 finalColor = vec4(0.0, 0.0, 1, 0.25);
    
    for (int i=0;i<MAX_LIGHTS;i++)
    {
@@ -30,19 +25,8 @@ void main (void)
       Ispec = clamp(Ispec, 0.0, 1.0); 
    
       finalColor += Iamb + Idiff + Ispec;
+      finalColor *= 0.8;
+      finalColor.b = 1;
    }
-   
-   sampler2D s;
-
-   if(col.b < 0.01) {
-     s = grass;
-   } else if (col.b > 0.01 && col.b < 0.5) {
-     s = rock;
-   } else {
-     s = snow;
-   }
-
-   vec4 c = texture2D(s, vec2(pos.x + 0.5, pos.y + 0.5)) + col * 0.2;
-   // write Total Color: 
-   gl_FragColor = (gl_FrontLightModelProduct.sceneColor + finalColor) * c; 
+   gl_FragColor = vec4((gl_FrontLightModelProduct.sceneColor + finalColor).xyz, 0.5);
 }

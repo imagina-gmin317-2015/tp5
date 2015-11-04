@@ -10,6 +10,13 @@ RainParticles::RainParticles(QImage *image)
     this->elapsed = 0;
     this->isActive = false;
     this->galleon = new Galleon(image);
+
+    shader = new QOpenGLShaderProgram();
+    shader->addShaderFromSourceFile(QOpenGLShader::Vertex, ":/water_vertex.glsl");
+    shader->addShaderFromSourceFile(QOpenGLShader::Fragment, ":/water_fragment.glsl");
+    qDebug() << "linked = " << shader->link();
+
+    initWater();
 }
 
 void RainParticles::update(float delta)
@@ -103,75 +110,22 @@ void RainParticles::draw(float delta)
         this->galleon->draw();
     }
 
-    if(waterHeight > 0.0001) {
-        glColor4f(0.2, 0.2, 1, 0.5);
-        glBegin(GL_QUADS);
-#pragma omp for schedule(dynamic)
-        for (int i = -50; i < 50; ++i) {
-            for (int j = -50; j < 50; ++j) {
-                float r = 0;
-                point p1, p2, p3, p4;
-                p1.x = i * 0.01; p1.y = j * 0.01;
-                p1.z = waterHeight + sin(i + elapsed + r) * 0.005 + cos(j + elapsed + r) * 0.005;
-
-                p2.x = (i + 1) * 0.01; p2.y = j * 0.01;
-                p2.z = waterHeight + sin(i + 1 + elapsed + r) * 0.005 + cos(j + elapsed + r) * 0.005;
-
-                p3.x = (i + 1) * 0.01; p3.y = (j + 1) * 0.01;
-                p3.z = waterHeight + sin(i + 1 + elapsed + r) * 0.005 + cos(j + 1 + elapsed + r) * 0.005;
-
-                p4.x = i * 0.01; p4.y = (j + 1) * 0.01;
-                p4.z = waterHeight + sin(i + elapsed + r) * 0.005 + cos(j + 1 + elapsed + r) * 0.005;
-
-                float z = qGray(image->pixel((i + 50) * this->image->width() * 0.01, (j + 50) * this->image->height() * 0.01));
-                z *= 0.0008;
-                //                qDebug() << (i + 50) * 240 * 0.01;
-                std::vector<float> vec = Utils::getNormal(p1, p3, p2);
-                glNormal3f(vec[0], vec[1], vec[2]);
-                if(p1.z > z || p2.z > z || p3.z > z) {
-                    glVertex3f(p1.x, p1.y, p1.z);
-                    glVertex3f(p2.x, p2.y, p2.z);
-                    glVertex3f(p3.x, p3.y, p3.z);
-                    glVertex3f(p4.x, p4.y, p4.z);
-                }
-
-                if( z < waterHeight) {
-                    if(i == -50) {
-                        glVertex3f(-0.5, p3.y, z);
-                        glVertex3f(-0.5, p1.y, z);
-                        glVertex3f(-0.5, p1.y, p1.z);
-                        glVertex3f(-0.5, p3.y, p4.z);
-                    } else if (i == 49) {
-                        glVertex3f(0.5, p3.y, p3.z);
-                        glVertex3f(0.5, p1.y, p2.z);
-                        glVertex3f(0.5, p1.y, z);
-                        glVertex3f(0.5, p3.y, z);
-                    }
-                    if(j == -50) {
-                        glVertex3f(p1.x, -0.5, z);
-                        glVertex3f(p3.x, -0.5, z);
-                        glVertex3f(p3.x, -0.5, p2.z);
-                        glVertex3f(p1.x, -0.5, p1.z);
-                    } else if(j == 49) {
-                        glVertex3f(p1.x, 0.5, p4.z);
-                        glVertex3f(p3.x, 0.5, p3.z);
-                        glVertex3f(p3.x, 0.5, z);
-                        glVertex3f(p1.x, 0.5, z);
-                    }
-                }
-            }
-        }
-        glEnd();
+    if(waterHeight > 0.000001) {
+        shader->bind();
+        shader->setUniformValue("waterHeight", waterHeight);
+        shader->setUniformValue("time", elapsed);
+        glEnableClientState(GL_VERTEX_ARRAY);
+        waterBuffer.bind();
+        glVertexPointer(2, GL_FLOAT, 0, NULL);
+        waterBuffer.release();
+        glDrawArrays(GL_QUADS, 0, waterArray.size());
+        glDisableClientState(GL_VERTEX_ARRAY);
+        shader->release();
     }
 }
 
 void RainParticles::reset()
 {
-    //    for (int i = 0; i < rainDrops.size(); ++i) {
-    //        RainDrop::pool->release(rainDrops[i]);
-    //    }
-    //    rainDrops.clear();
-    //    waterHeight = 0;
 }
 
 void RainParticles::setActive(bool active)
@@ -194,6 +148,23 @@ RainDrop *RainParticles::createRainDrops(RainDrop *s)
     s->y = (float) ((qrand() % height) - height * 0.5) / (float) height;
     s->z = (qrand() % 100) * 0.01f;
     return s;
+}
+
+void RainParticles::initWater()
+{
+    float n = 0.001;
+    for (int i = -500; i < 500; ++i) {
+        for (int j = -500; j < 500; ++j) {
+            waterArray.push_back(QVector2D(i * n, (j + 1) * n));
+            waterArray.push_back(QVector2D(i * n, j * n));
+            waterArray.push_back(QVector2D((i + 1) * n, j * n));
+            waterArray.push_back(QVector2D((i + 1) * n, (j + 1) * n));
+        }
+    }
+    waterBuffer.create();
+    waterBuffer.bind();
+    waterBuffer.allocate(waterArray.constData(), waterArray.size() * sizeof(QVector2D));
+    waterBuffer.release();
 }
 
 RainDrop *RainDrop::init(float x, float y, float z)

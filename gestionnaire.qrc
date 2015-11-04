@@ -15,5 +15,7 @@
         <file>vertex.glsl</file>
         <file>rock.jpg</file>
         <file>snow.jpg</file>
+        <file>water_fragment.glsl</file>
+        <file>water_vertex.glsl</file>
     </qresource>
 </RCC>

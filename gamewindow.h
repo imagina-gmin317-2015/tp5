@@ -89,7 +89,6 @@ private:
     QOpenGLTexture *snowTexture;
 
     QOpenGLShaderProgram *shader;
-    int colorsShaderId;
 
     GLfloat* vertices;
     std::vector<point*> normals;
