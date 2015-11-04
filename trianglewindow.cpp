@@ -241,7 +241,7 @@ void TriangleWindow::render()
     }
     glClear(GL_COLOR_BUFFER_BIT);
     glClearDepth(1);
-
+    glMatrixMode(GL_MODELVIEW);
 
     glLoadIdentity();
     glScalef(c->ss,c->ss,c->ss);
@@ -605,7 +605,7 @@ void TriangleWindow::displayTrianglesTexture()
         {
 
             id = i*m_image.width() +j;
-            //displayColor(p[id].z);
+            displayColor(p[id].z);
             glVertex3f(
                         p[id].x,
                         p[id].y,
@@ -655,22 +655,22 @@ void TriangleWindow::displayColor(float alt)
     if (alt > 0.2)
     {
         //glColor3f(01.0f, 1.0f, 1.0f);
-        glTexCoord2i(1,0);
+        glTexCoord2i(1,1);
     }
     else     if (alt > 0.1)
     {
         //glColor3f(alt, 1.0f, 1.0f);
-        glTexCoord2i(1,0);
+        glTexCoord2i(1,1);
     }
     else     if (alt > 0.05f)
     {
         //glColor3f(01.0f, alt, alt);
-        glTexCoord2i(1,0);
+        glTexCoord2i(1,1);
     }
     else
     {
-        //glColor3f(0.0f, 0.0f, 1.0f);
-        glTexCoord2i(1,0);
+       // glColor3f(0.0f, 0.0f, 1.0f);
+        glTexCoord2i(1,1);
     }
 
 }
