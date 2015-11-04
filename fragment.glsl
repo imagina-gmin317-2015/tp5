@@ -4,7 +4,8 @@
 // attribute vec4 colors;
 varying vec4 col;
 varying vec3 N;
-varying vec3 V;    
+varying vec3 V;
+uniform sampler2D tex;
 #define MAX_LIGHTS 3 
 
 void main (void) 
@@ -31,7 +32,7 @@ void main (void)
    
       finalColor += Iamb + Idiff + Ispec;
    }
-   
+   vec4 c = texture2D(tex,gl_TexCoord[0].st);
    // write Total Color: 
-   gl_FragColor = (gl_FrontLightModelProduct.sceneColor + finalColor) * col; 
+   gl_FragColor = (gl_FrontLightModelProduct.sceneColor + finalColor) * c; 
 }

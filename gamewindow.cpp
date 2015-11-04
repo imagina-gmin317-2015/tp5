@@ -71,14 +71,18 @@ void GameWindow::initialize()
     this->onSeasonChange();
     this->displayNormals = false;
 
-    QImage image(":/heightmap-4.png");
+    QImage image(":/grass.jpg");
 
-    glGenTextures(1, &textureId);
-    glBindTexture(GL_TEXTURE_2D, textureId);
-    glTexImage2D(GL_TEXTURE_2D, 0, 3, image.width(), image.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, image.bits());
-    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
-    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
-    glBindTexture( GL_TEXTURE_2D, 0 );
+    texture = new QOpenGLTexture(image);
+    texture->setMinificationFilter(QOpenGLTexture::LinearMipMapLinear);
+    texture->setMagnificationFilter(QOpenGLTexture::Linear);
+
+//    glGenTextures(1, &textureId);
+//    glBindTexture(GL_TEXTURE_2D, textureId);
+//    glTexImage2D(GL_TEXTURE_2D, 0, 3, image.width(), image.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, image.bits());
+//    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
+//    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+//    glBindTexture( GL_TEXTURE_2D, 0 );
 
     m_vertexbuffer.create();
     m_vertexbuffer.bind();
@@ -266,6 +270,7 @@ void GameWindow::keyPressEvent(QKeyEvent *event)
 void GameWindow::drawTriangles()
 {
     shader->bind();
+    texture->bind();
 
     glMaterialf(GL_FRONT, GL_SHININESS, 100.0);
 
@@ -286,6 +291,7 @@ void GameWindow::drawTriangles()
     glDisableClientState(GL_NORMAL_ARRAY);
     glDisableClientState(GL_VERTEX_ARRAY);
 
+    texture->release();
     shader->release();
 }
 

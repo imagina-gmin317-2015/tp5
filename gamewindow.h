@@ -5,6 +5,7 @@
 #include "QTimer"
 #include <QOpenGLShaderProgram>
 #include <QOpenGLBuffer>
+#include <QOpenGLTexture>
 
 #include "camera.h"
 #include "openglwindow.h"
@@ -82,6 +83,8 @@ private:
     QOpenGLBuffer m_vertexbuffer;
     QOpenGLBuffer m_normalbuffer;
     QOpenGLBuffer m_colorbuffer;
+
+    QOpenGLTexture *texture;
 
     QOpenGLShaderProgram *shader;
     int colorsShaderId;
