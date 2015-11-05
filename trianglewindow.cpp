@@ -593,9 +593,9 @@ void TriangleWindow::displayColor(float alt)
 void TriangleWindow::updateParticlesAut()
 {
     int id2;
-#pragma omp parallel
+//#pragma omp parallel
     {
-#pragma omp for
+//#pragma omp for
         for(int id = 0; id < numParticules; id++)
         {
             particules[id].z -= 0.0003f * ((float) minP + (rand() % (int)(maxP - minP + 1)));
@@ -652,9 +652,9 @@ void TriangleWindow::updateParticlesAut()
 void TriangleWindow::updateParticlesHiv()
 {
     int id2;
-#pragma omp parallel
+//#pragma omp parallel
     {
-#pragma omp for
+//#pragma omp for
         for(int id = 0; id < numParticules; id++)
         {
             particules[id].z -= 0.00001f * ((float) minP + (rand() % (int)(maxP - minP + 1)));
