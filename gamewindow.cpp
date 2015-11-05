@@ -268,6 +268,9 @@ void GameWindow::keyPressEvent(QKeyEvent *event)
 void GameWindow::drawTriangles()
 {
     shader->bind();
+    shader->setUniformValue("a_summer", drought->active());
+    shader->setUniformValue("a_summerTime", drought->getYellow() * 5);
+    shader->setUniformValue("a_snowHeightModifier", drought->getSnowHeightModifier());
     glActiveTexture(GL_TEXTURE0);
     grassTexture->bind();
 

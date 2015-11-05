@@ -40,6 +40,11 @@ void Drought::setActive(bool active)
     this->isActive = active;
 }
 
+bool Drought::active() const
+{
+    return this->isActive;
+}
+
 QVector<data *> Drought::attributes()
 {
     QVector<data *> att;
