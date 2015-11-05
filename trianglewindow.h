@@ -14,6 +14,7 @@
 #include <iostream>
 #include <QFile>
 #include <QKeyEvent>
+#include <math.h>
 
 #define MAX_PARTICULES 700
 
@@ -27,6 +28,7 @@ public:
     void render() Q_DECL_OVERRIDE;
     void keyPressEvent(QKeyEvent *keyEvent);
     void generateTerrain();
+    QVector3D displayColor(float alt);
 
 private:
     GLuint loadShader(GLenum type, const char *source);
@@ -35,6 +37,7 @@ private:
     GLuint m_colAttr;
     GLuint m_texAttr;
     GLuint m_texCoord;
+    GLuint m_normal;
     GLuint m_matrixUniform;
 
     int _width;
@@ -42,13 +45,14 @@ private:
     GLfloat _camX;
     GLfloat _camY;
     GLfloat _camZ;
+    GLfloat _angle;
 
     bool _wireFrame;
 
-    QVector<GLfloat> _map;
+    QVector<QVector3D> _map;
+    QVector<QVector3D> _normal;
     QVector<GLfloat> _texture;
-    QVector<GLfloat> _color;
-    Point *p;
+    QVector<QVector3D> _color;
 
     QOpenGLShaderProgram *m_program;
     int m_frame;
