@@ -38,6 +38,7 @@ void main (void)
    vec4 c;
 
    if(col.b < 0.01) {
+     if(summerTime > 0.7) summerTime = 0.7;
      col.r += summerTime;
      col.g += summerTime;
      col.b -= summerTime;

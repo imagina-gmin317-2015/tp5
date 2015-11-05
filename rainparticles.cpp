@@ -158,9 +158,9 @@ RainDrop *RainParticles::createRainDrops(RainDrop *s)
 
 void RainParticles::initWater()
 {
-    float n = 0.001;
-    for (int i = -500; i < 500; ++i) {
-        for (int j = -500; j < 500; ++j) {
+    float n = 0.01;
+    for (int i = -50; i < 50; ++i) {
+        for (int j = -50; j < 50; ++j) {
             waterArray.push_back(QVector2D(i * n, (j + 1) * n));
             waterArray.push_back(QVector2D(i * n, j * n));
             waterArray.push_back(QVector2D((i + 1) * n, j * n));

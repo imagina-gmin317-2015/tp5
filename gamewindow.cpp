@@ -134,6 +134,7 @@ void GameWindow::onSeasonChange()
 
 void GameWindow::onSaveRequest()
 {
+//    ResourceManager::setSave(this->serialize(), 0);
     ResourceManager::setSave(this->serialize(), windowId);
 }
 
