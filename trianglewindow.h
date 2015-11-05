@@ -5,6 +5,8 @@
 #include "filemanager.h"
 #include "plyloader.h"
 #include <QString>
+#include <QVector>
+#include <QVector3D>
 
 /*struct point
 {
@@ -12,6 +14,9 @@
 };*/
 
 class FileManager;
+
+
+
 
 
 
@@ -87,6 +92,10 @@ private:
     QTimer *timer;
     QTimer *timerFPS;
     QVector<PlyLoader* > mods;
+    QOpenGLTexture* text;
+    QVector<QVector3D> points;
+    QVector<QVector3D> normals;
+    QOpenGLShaderProgram* shader;
 };
 
 

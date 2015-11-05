@@ -4,5 +4,10 @@
         <file>heightmap-2.png</file>
         <file>heightmap-3.png</file>
         <file>summertree.ply</file>
+        <file>herbe.png</file>
+        <file>neige.jpg</file>
+        <file>roche.jpg</file>
+        <file>fragment.glsl</file>
+        <file>vertex.glsl</file>
     </qresource>
 </RCC>

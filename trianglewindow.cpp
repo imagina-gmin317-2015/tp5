@@ -4,6 +4,9 @@
 #include <QtGui/QMatrix4x4>
 #include <QtGui/QOpenGLShaderProgram>
 #include <QtGui/QScreen>
+#include <QOpenGLTexture>
+#include <QOpenGLShaderProgram>
+
 
 #include <QtCore/qmath.h>
 #include <QMouseEvent>
@@ -22,6 +25,14 @@ int maxP = 360;
 
 
 using namespace std;
+
+GLubyte Texture[16] =
+{
+    254,254,254,0xFF, 130,196,108,0xFF,
+    148,127,96,0xFF, 49,140,231,0xFF
+};
+
+GLuint Name;
 
 TriangleWindow::TriangleWindow()
 {
@@ -135,11 +146,22 @@ void TriangleWindow::initialize()
     glLightfv(GL_LIGHT0, GL_SPECULAR, specularLight);
     glLightfv(GL_LIGHT0, GL_POSITION, position);
 
+    // Textures
+    glEnable(GL_TEXTURE_2D);
+    text = new QOpenGLTexture(QImage(":/herbe.png").mirrored());
+    text->setMinificationFilter(QOpenGLTexture::LinearMipMapLinear);
+    text->setMagnificationFilter(QOpenGLTexture::Linear);
+
+    // Shader
+    shader = new QOpenGLShaderProgram();
+    shader->addShaderFromSourceFile(QOpenGLShader::Vertex,":/vertex.glsl");
+    shader->addShaderFromSourceFile(QOpenGLShader::Fragment,":/fragment.glsl");
+    shader->link();
+
 
     loadMap(":/heightmap-1.png");
 
     particules = new point[numParticules];
-
 
 
     for(int i = 0; i < numParticules; i++)
@@ -180,18 +202,74 @@ void TriangleWindow::loadMap(QString localPath)
     uint id = 0;
     p = new point[m_image.width() * m_image.height()];
     QRgb pixel;
-    for(int i = 0; i < m_image.width(); i++)
+    for(int i = 0; i < m_image.width()-1; i++)
     {
-        for(int j = 0; j < m_image.height(); j++)
+        for(int j = 0; j < m_image.height()-1; j++)
         {
 
             pixel = m_image.pixel(i,j);
 
             id = i*m_image.width() +j;
 
-            p[id].x = (float)i/(m_image.width()) - ((float)m_image.width()/2.0)/m_image.width();
+            /*p[id].x = (float)i/(m_image.width()) - ((float)m_image.width()/2.0)/m_image.width();
             p[id].y = (float)j/(m_image.height()) - ((float)m_image.height()/2.0)/m_image.height();
-            p[id].z = 0.001f * (float)(qRed(pixel));
+            p[id].z = 0.001f * (float)(qRed(pixel));*/
+            QVector3D v1;
+            v1.setX((float)i/(m_image.width()) - ((float)m_image.width()/2.0)/m_image.width());
+            v1.setY((float)j/(m_image.height()) - ((float)m_image.height()/2.0)/m_image.height());
+            v1.setZ(0.001f * (float)(qRed(pixel)));
+            points.push_back(v1);
+
+            pixel = m_image.pixel(i+1,j);
+
+            QVector3D v2;
+            v2.setX((float)(i+1)/(m_image.width()) - ((float)m_image.width()/2.0)/m_image.width());
+            v2.setY((float)j/(m_image.height()) - ((float)m_image.height()/2.0)/m_image.height());
+            v2.setZ(0.001f * (float)(qRed(pixel)));
+            points.push_back(v2);
+
+            pixel = m_image.pixel(i,j+1);
+
+            QVector3D v3;
+            v3.setX((float)i/(m_image.width()) - ((float)m_image.width()/2.0)/m_image.width());
+            v3.setY((float)(j+1)/(m_image.height()) - ((float)m_image.height()/2.0)/m_image.height());
+            v3.setZ(0.001f * (float)(qRed(pixel)));
+            points.push_back(v3);
+
+            QVector3D n = QVector3D::normal(v3-v1,v2-v1);
+            normals.push_back(n);
+            normals.push_back(n);
+            normals.push_back(n);
+
+            pixel = m_image.pixel(i,j+1);
+            QVector3D v4;
+            v4.setX((float)i/(m_image.width()) - ((float)m_image.width()/2.0)/m_image.width());
+            v4.setY((float)(j+1)/(m_image.height()) - ((float)m_image.height()/2.0)/m_image.height());
+            v4.setZ(0.001f * (float)(qRed(pixel)));
+            points.push_back(v4);
+
+
+
+            pixel = m_image.pixel(i+1,j);
+
+            QVector3D v5;
+            v5.setX((float)(i+1)/(m_image.width()) - ((float)m_image.width()/2.0)/m_image.width());
+            v5.setY((float)(j)/(m_image.height()) - ((float)m_image.height()/2.0)/m_image.height());
+            v5.setZ(0.001f * (float)(qRed(pixel)));
+            points.push_back(v5);
+
+            pixel = m_image.pixel(i+1,j+1);
+
+            QVector3D v6;
+            v6.setX((float)(i+1)/(m_image.width()) - ((float)m_image.width()/2.0)/m_image.width());
+            v6.setY((float)(j+1)/(m_image.height()) - ((float)m_image.height()/2.0)/m_image.height());
+            v6.setZ(0.001f * (float)(qRed(pixel)));
+            points.push_back(v6);
+
+            n= QVector3D::normal(v6-v4,v5-v4);
+            normals.push_back(n);
+            normals.push_back(n);
+            normals.push_back(n);
 
         }
     }
@@ -222,7 +300,7 @@ void TriangleWindow::render()
     }
     glClear(GL_COLOR_BUFFER_BIT);
     glClearDepth(1);
-
+    glMatrixMode(GL_MODELVIEW);
 
     glLoadIdentity();
     glScalef(c->ss,c->ss,c->ss);
@@ -242,7 +320,8 @@ void TriangleWindow::render()
 
 
     glNormal3f(0,0,-1);
-    switch(c->etat)
+    displayTriangles();
+    /*switch(c->etat)
     {
     case 0:
         displayPoints();
@@ -267,11 +346,11 @@ void TriangleWindow::render()
     default:
         displayPoints();
         break;
-    }
-    /*if (season == 2)
+    }*/
+    if (season == 2)
         updateParticlesAut();
     else if (season == 3)
-        updateParticlesHiv();*/
+        updateParticlesHiv();
 
     for(int i=0;i<mods.size();i++){
         mods.at(i)->draw();
@@ -404,8 +483,21 @@ void TriangleWindow::displayTriangles()
     else if (season==2) glColor3f(0.5f, 0.5f, 0.8f);
     else if (season==3) glColor3f(1.0f, 1.0f, 1.0f);
 
+    shader->bind();
+    text->bind();
+    glEnableClientState(GL_VERTEX_ARRAY);
+    glEnableClientState(GL_NORMAL_ARRAY);
+    glVertexPointer(3,GL_FLOAT,0,points.constData());// affiche le tableau passé en param (gere tout, tout seul)
+    glNormalPointer(GL_FLOAT,0,normals.constData());// affiche les normals
+    glDrawArrays(GL_TRIANGLES,0,points.size());
+    glDisableClientState(GL_VERTEX_ARRAY);
+    glDisableClientState(GL_NORMAL_ARRAY);
+    text->release();
+    shader->release();
 
-    glBegin(GL_TRIANGLES);
+
+
+    /*glBegin(GL_TRIANGLES);
     uint id = 0;
 
     for(int i = 0; i < m_image.width()-1; i++)
@@ -449,7 +541,7 @@ void TriangleWindow::displayTriangles()
         }
     }
 
-    glEnd();
+    glEnd();*/
 }
 
 void TriangleWindow::displayTrianglesC()
@@ -576,7 +668,7 @@ void TriangleWindow::displayLines()
 
 void TriangleWindow::displayTrianglesTexture()
 {
-    glColor3f(1.0f, 1.0f, 1.0f);
+    // glColor3f(1.0f, 1.0f, 1.0f);
     glBegin(GL_TRIANGLES);
     uint id = 0;
 
@@ -632,21 +724,26 @@ void TriangleWindow::displayTrianglesTexture()
 
 void TriangleWindow::displayColor(float alt)
 {
+
     if (alt > 0.2)
     {
-        glColor3f(01.0f, 1.0f, 1.0f);
+        //glColor3f(01.0f, 1.0f, 1.0f);
+        glTexCoord2i(1,1);
     }
     else     if (alt > 0.1)
     {
-        glColor3f(alt, 1.0f, 1.0f);
+        //glColor3f(alt, 1.0f, 1.0f);
+        glTexCoord2i(1,1);
     }
     else     if (alt > 0.05f)
     {
-        glColor3f(01.0f, alt, alt);
+        //glColor3f(01.0f, alt, alt);
+        glTexCoord2i(1,1);
     }
     else
     {
-        glColor3f(0.0f, 0.0f, 1.0f);
+       // glColor3f(0.0f, 0.0f, 1.0f);
+        glTexCoord2i(1,1);
     }
 
 }
