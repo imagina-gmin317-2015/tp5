@@ -40,6 +40,7 @@ void GameWindow::initialize()
     timer.setInterval(framerate * 1000);
     this->camera->initialize(devicePixelRatio(), width(), height(), 0, 100.0);
     timer.start();
+    elapsedTimer.start();
     this->connect(&timer, SIGNAL(timeout()), this, SLOT(renderNow()));
 
     imagePath = ":/heightmap-1.png";
@@ -134,7 +135,7 @@ void GameWindow::onSeasonChange()
 
 void GameWindow::onSaveRequest()
 {
-//    ResourceManager::setSave(this->serialize(), 0);
+    //    ResourceManager::setSave(this->serialize(), 0);
     ResourceManager::setSave(this->serialize(), windowId);
 }
 
@@ -145,7 +146,12 @@ void GameWindow::onLoadRequest()
 
 void GameWindow::render()
 {
-    this->render((float) timer.interval() * 0.001f);
+    elapsed = elapsedTimer.elapsed();
+    if(elapsed > timer.interval() * 0.5) {
+        this->render((float) elapsed * 0.0005f);
+        elapsed -= timer.interval();
+        elapsedTimer.restart();
+    }
 }
 
 void GameWindow::render(float delta)

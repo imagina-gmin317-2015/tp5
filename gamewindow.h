@@ -118,6 +118,7 @@ private:
     float lastUpdate = 0;
     bool fill = false;
     QTimer timer;
+    QElapsedTimer elapsedTimer;
 
     GLuint textureId;
 };
