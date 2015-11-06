@@ -4,50 +4,17 @@
  - echap permet de libérer le curseur
  - tab quitte toutes les fenêtres
  - F5 pour le chargement
- - F6 pour la sauvegarde (il faut que les 4 fenêtres soient lancées pour pouvoir sauvegarder)
+ - F6 pour la sauvegarde
 
-- J'ai choisis de ne pas sauvegarder tous les vertices de la map par soucis de taille du fichier de sauvegarde, mais plutot de sauvegarder l'état du jeu, c'est à dire la map chargée, la saison, la hauteur de l'eau, l'avancement dans l'été... La position des particules n'est évidemment pas sauvegardée
+Il n'y a plus qu'une seule fenêtre pour ce TP au lieu des quatre, une fenêtre supplémentaire permettant de changer les saisons est néamoins présente. Attention, elle peut se trouver trop à droite ou derrière la fenêtre principale si l'écran est trop petit.
 
-- La sauvegarde des attributs de chaque saison se fait de la sorte :
+Pour ce TP, tout à été passé en VAO + VBO, ce qui décharge grandement le processeur, mais qui peut mettre à mal la carte graphique. Cela a également permis de simplifier grandement l'utilisation de shaders.
+Un shader est utilisé pour la map, une texture différente est utilisée pour la terre, la pierre et la neige. 
 
-
-        QVector<data *> Drought::attributes()
-        {
-          QVector<data *> att;
-          att.push_back(ResourceManager::FLOAT(&yellow));
-          att.push_back(ResourceManager::FLOAT(&snowHeight));
-          att.push_back(ResourceManager::BOOL(&isActive));
-          return att;
-        }
-
-On retourne un tableau de pointeurs vers les attributs, ce qui permet de les sauvegarder simplement avec leur valeur, mais cela permet également de les affecter lors du chargement.
-
-data est une struct qui permet de sérialiser tout type de données, un pointeur sur void permet de contenir n'importe quel type, la fonction toString est donnée à la construction de l'objet pour savoir comment le sérialiser et enfin une information sur le type est conservée pour l'affectation, void* perdant cette information.
-
-     struct data {
-     	void *valuePtr;
-	    std::function<QString()> toString;
-	    int type;
-     };
-
-
-Exemple de fonction permettant le chargement et la sauvegarde d'un float
-
-
-     data *ResourceManager::FLOAT(float *value)
-     {
-          data *d = new data();
-	  	  d->valuePtr = value;
-	      d->type = _float;
-	      d->toString = [=]() {
-	  	      QString s = "FLOAT:";
-	  	      return  s + QString::number(*value) + ";";
-	  };
-	  return d;
-     }
-
-
-- En plus du fichier de l'arbre, j'ai ajouté un bateau pour l'hiver et des oiseaux en été. Ils ont respectivement 13 000 et 15 000 vertices, ce qui impact grandement les performances, c'est surtout du au fait que j'utilise opengl en mode direct, il est conseillé de fermer autres fenêtres pour profiter d'un nombre d'image par secondes maximal
 ![alt tag](./birds.png)
-- Le bateau se promène sur la map dès qu'il y a assez d'eau en évitant au maximum les montagnes, il se tourne dans le sens de sa direction.
+
+Un second shader est également utilisé pour l'eau
+
 ![alt tag](./boat.png)
+
+L'utilisation du shader permet de ne pas modifier les données en mémoire et de rendre plus simple la modification de l'environnement qui si l'on devait modifier à la main les VAO

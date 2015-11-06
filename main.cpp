@@ -36,8 +36,8 @@ using namespace std;
 #define SPRING "spring"
 
 
-
 GameWindow *createWindow(Camera* camera, float framerate) {
+    ResourceManager::windowCount++;
     QSurfaceFormat format;
     format.setSamples(16);
 
@@ -55,7 +55,6 @@ int main(int argc, char **argv)
     srand(time(NULL));
     QApplication app(argc, argv);
 
-    ResourceManager::init();
 
     ControllerWindow window;
     window.show();
@@ -94,6 +93,9 @@ int main(int argc, char **argv)
 //    QObject::connect(g, SIGNAL(requestSave()), &window, SLOT(onSaveRequest()));
 //    QObject::connect(&window, SIGNAL(requestLoad()), g, SLOT(onLoadRequest()));
 //    QObject::connect(&window, SIGNAL(requestSave()), g, SLOT(onSaveRequest()));
+
+    ResourceManager::init();
+    qDebug() << "window count = " << ResourceManager::windowCount;
 
     return app.exec();
 }

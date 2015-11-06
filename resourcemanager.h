@@ -40,12 +40,15 @@ public:
 
     static void init();
 
+    static int windowCount;
+
 private:
     static data *dataFromType(QString s);
     static void saveSaves();
 
     static QVector<QString> loadedSaves;
     static QVector<QString> toSaveSaves;
+
 };
 
 #endif // RESOURCEMANAGER_H

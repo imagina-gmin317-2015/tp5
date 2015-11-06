@@ -2,6 +2,7 @@
 
 QVector<QString> ResourceManager::toSaveSaves;
 QVector<QString> ResourceManager::loadedSaves;
+int ResourceManager::windowCount = 0;
 
 QString ResourceManager::serialize(QVector<data *> vec)
 {
@@ -90,7 +91,7 @@ void ResourceManager::loadSave()
         QString s;
         forever {
             stream >> s;
-            if (s.size() < 3) return;
+            if (s.size() < windowCount) return;
             loadedSaves.push_back(s);
         }
     }
@@ -104,22 +105,23 @@ QString ResourceManager::getSave(int saveIndex)
 void ResourceManager::setSave(QString save, int saveIndex)
 {
     qDebug() << "setting save";
+    qDebug() << "toSaveSaves size = " << toSaveSaves.size();
     toSaveSaves[saveIndex] = save;
 
     for (int i = 0; i < toSaveSaves.size(); ++i) {
-        if(toSaveSaves[i].size() < 3) return;
+        if(toSaveSaves[i].size() < windowCount) return;
     }
 
     saveSaves();
     toSaveSaves.clear();
-    for (int i = 0; i < 4; ++i) {
+    for (int i = 0; i < windowCount; ++i) {
         toSaveSaves.push_back("");
     }
 }
 
 void ResourceManager::init()
 {
-    for (int i = 0; i < 4; ++i) {
+    for (int i = 0; i < windowCount; ++i) {
         toSaveSaves.push_back("");
     }
     loadSave();
