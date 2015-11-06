@@ -59,7 +59,7 @@ void GameWindow::initialize()
     glEnable(GL_CULL_FACE);
     glEnable (GL_BLEND);
     glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);	// Active la correction de perspective (pour ombrage, texture, ...)
+    glHint(GL_PERSPECTIVE_CORRECTION_HINT,  GL_FASTEST);	// Active la correction de perspective (pour ombrage, texture, ...)
 
     snow = new SnowParticles(m_image.width() * 2, m_image.height() * 2, &this->m_image);
     rain = new RainParticles(&this->m_image);
@@ -268,7 +268,6 @@ void GameWindow::keyPressEvent(QKeyEvent *event)
 void GameWindow::drawTriangles()
 {
     shader->bind();
-    shader->setUniformValue("a_summer", drought->active());
     shader->setUniformValue("a_summerTime", drought->getYellow() * 5);
     shader->setUniformValue("a_snowHeightModifier", drought->getSnowHeightModifier());
     glActiveTexture(GL_TEXTURE0);

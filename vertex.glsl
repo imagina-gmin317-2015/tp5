@@ -5,7 +5,6 @@ varying vec4 pos;
 uniform bool a_summer;
 uniform float a_summerTime;
 uniform float a_snowHeightModifier;
-varying bool summer;
 varying float summerTime;
 varying float snowHeightModifier;
 
@@ -16,7 +15,6 @@ void main(void)
     N = normalize(gl_NormalMatrix * gl_Normal);
     col = gl_Color;
     pos = gl_Vertex;
-    summer = a_summer;
     snowHeightModifier = a_snowHeightModifier;
     summerTime = a_summerTime;
 }

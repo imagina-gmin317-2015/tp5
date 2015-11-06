@@ -5,7 +5,6 @@ uniform sampler2D grass;
 uniform sampler2D snow;
 uniform sampler2D rock;
 varying vec4 pos;
-varying bool summer;
 varying float summerTime;
 varying float snowHeightModifier;
 #define MAX_LIGHTS 3 
@@ -36,17 +35,18 @@ void main (void)
    }
    
    vec4 c;
+   vec4 tempCol = col;
 
-   if(col.b < 0.01) {
-     col.r += summerTime;
-     col.g += summerTime;
-     col.b -= summerTime;
+   if(tempCol.b < 0.01) {
+     tempCol.r += summerTime;
+     tempCol.g += summerTime;
+     tempCol.b -= summerTime;
 
-     c = texture2D(grass, vec2(pos.x + 0.5, pos.y + 0.5)) + col * 0.2;
-   } else if (col.b > 0.01 && col.b < 0.5) {
-     c = texture2D(rock, vec2(pos.x + 0.5, pos.y + 0.5)) + col * 0.2;
+     c = texture2D(grass, vec2(pos.x + 0.5, pos.y + 0.5)) + tempCol * 0.2;
+   } else if (tempCol.b > 0.01 && tempCol.b < 0.5) {
+     c = texture2D(rock, vec2(pos.x + 0.5, pos.y + 0.5)) + tempCol * 0.2;
    } else {
-     c = texture2D(snow, vec2(pos.x + 0.5, pos.y + 0.5)) + col * 0.2;
+     c = texture2D(snow, vec2(pos.x + 0.5, pos.y + 0.5)) + tempCol * 0.2;
    }
    gl_FragColor = (gl_FrontLightModelProduct.sceneColor + finalColor) * c;
 }
