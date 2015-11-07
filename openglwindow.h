@@ -66,6 +66,7 @@ public slots:
     void renderNow();
 
 protected:
+    QOpenGLPaintDevice *m_device;
 
     bool event(QEvent *event);
 
@@ -76,7 +77,6 @@ private:
     bool m_animating;
 
     QOpenGLContext *m_context;
-    QOpenGLPaintDevice *m_device;
 };
 //! [1]
 

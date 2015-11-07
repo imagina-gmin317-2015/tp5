@@ -146,8 +146,29 @@ void GameWindow::onLoadRequest()
 
 void GameWindow::render()
 {
+
+    if (!m_device)
+        m_device = new QOpenGLPaintDevice();
+
+    m_device->setSize(size());
+
+
     elapsed = elapsedTimer.elapsed();
     if(elapsed > timer.interval() * 0.5) {
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+
+        glDisable(GL_DEPTH_TEST);
+
+        QPainter p;
+        p.begin(m_device);
+        p.setPen(Qt::yellow);
+        p.setFont(QFont("Arial", 20));
+        p.drawText(10, 30, QString::number((int) (1.0 / (elapsed * 0.001f))));
+        p.end();
+
+        glEnable(GL_DEPTH_TEST);
+        glDepthFunc(GL_LESS);
+
         this->render((float) elapsed * 0.0005f);
         elapsed -= timer.interval();
         elapsedTimer.restart();
@@ -156,7 +177,6 @@ void GameWindow::render()
 
 void GameWindow::render(float delta)
 {
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     if(cursorCaptured) {
         this->cursor->setPos(this->position().x() + width() * 0.5f, this->position().y() + height() * 0.5f);
     }

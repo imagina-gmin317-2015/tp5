@@ -4,7 +4,7 @@ Drought::Drought()
 {
     yellow = 0;
     snowHeight = 0;
-    birds = new Birds(10);
+    birds = new Birds(20);
 }
 
 void Drought::update(float delta)
