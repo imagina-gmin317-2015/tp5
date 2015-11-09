@@ -12,7 +12,8 @@ SOURCES += $$PWD/openglwindow.cpp \
     particule.cpp \
     filemanager.cpp \
     gamewindow.cpp \
-    trianglewindow.cpp
+    trianglewindow.cpp \
+    fall.cpp
 HEADERS += $$PWD/openglwindow.h \
     tcpserver.h \
     camera.h \
@@ -20,7 +21,8 @@ HEADERS += $$PWD/openglwindow.h \
     particule.h \
     filemanager.h \
     gamewindow.h \
-    trianglewindow.h
+    trianglewindow.h \
+    fall.h
 
 SOURCES += \
     main.cpp

@@ -3,7 +3,7 @@
 
 #include "openglwindow.h"
 #include "point.h"
-#include "particule.h"
+#include "fall.h"
 
 #include <QtGui/QOpenGLShaderProgram>
 #include <QtGui/QScreen>
@@ -15,8 +15,6 @@
 #include <QFile>
 #include <QKeyEvent>
 #include <math.h>
-
-#define MAX_PARTICULES 700
 
 class TriangleWindow : public OpenGLWindow
 {
@@ -30,6 +28,8 @@ public:
     void generateTerrain();
     QVector3D displayColor(float alt);
 
+    void initFall();
+
 private:
     GLuint loadShader(GLenum type, const char *source);
 
@@ -39,6 +39,11 @@ private:
     GLuint m_texCoord;
     GLuint m_normal;
     GLuint m_matrixUniform;
+    GLuint particulePosAttr;
+    GLuint particuleColAttr;
+    GLuint particulePointSize;
+    GLuint particulePointColor;
+    GLuint particuleMatrixUniform;
 
     int _width;
     int _height;
@@ -55,22 +60,24 @@ private:
     QVector<QVector3D> _color;
 
     QOpenGLShaderProgram *m_program;
+    QOpenGLShaderProgram *particuleShader;
     int m_frame;
 
     QOpenGLTexture *texture;
+    QImage m_image;
 
     // vao
     QOpenGLVertexArrayObject vao;
     QOpenGLBuffer vbo;
-    QOpenGLBuffer matVbo;
+    QOpenGLVertexArrayObject fallVao;
+    QOpenGLBuffer fallVbo;
 
     //seasons
-    QTimer *timerParticule;
+    Fall *_fall;
+    QTimer *timerFall;
     QString *allSeasons;
 
     int currentSeason;
-
-    Particule **particules;
 };
 
 #endif // TRIANGLEWINDOW_H

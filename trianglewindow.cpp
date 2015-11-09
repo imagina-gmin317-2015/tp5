@@ -22,6 +22,21 @@ static const char *fragmentShaderSource =
     "   gl_FragColor = color * (ambiant_color * col);\n"
     "}\n";
 
+static const char *vertexShaderParticule =
+    "attribute highp vec4 posAttr;\n"
+    "uniform highp mat4 matrix;\n"
+    "uniform float size;\n"
+    "void main() {\n"
+    "   gl_PointSize = size;\n"
+    "   gl_Position = matrix * posAttr;\n"
+    "}\n";
+
+static const char *fragmentShaderParticule =
+    "uniform vec4 color;\n"
+    "void main() {\n"
+    "   gl_FragColor = color;\n"
+    "}\n";
+
 TriangleWindow::TriangleWindow()
     : m_program(0)
     , m_frame(0)
@@ -39,6 +54,19 @@ TriangleWindow::TriangleWindow(int w, int h) : m_program(0), m_frame(0)
     _angle = 100;
 
     _wireFrame = false;
+
+    timerFall = new QTimer();
+    timerFall->start(10);
+
+    connect(timerFall, SIGNAL(timeout()), this, SLOT(renderNow()));
+
+    allSeasons = new QString[4];
+    allSeasons[0] = "SUMMER";
+    allSeasons[1] = "AUTUMN";
+    allSeasons[2] = "WINTER";
+    allSeasons[3] = "SPRING";
+
+    currentSeason = 0;
 }
 
 GLuint TriangleWindow::loadShader(GLenum type, const char *source)
@@ -52,6 +80,7 @@ GLuint TriangleWindow::loadShader(GLenum type, const char *source)
 void TriangleWindow::initialize()
 {
     generateTerrain();
+    initFall();
 
     m_program = new QOpenGLShaderProgram(this);
     m_program->addShaderFromSourceCode(QOpenGLShader::Vertex, vertexShaderSource);
@@ -65,6 +94,9 @@ void TriangleWindow::initialize()
     m_texAttr = glGetUniformLocation(m_program->programId(), "texture");
     glUniform1i(m_texAttr, 0);
 
+    size_t verticesSize = _map.size()*sizeof(QVector3D), colorsSize = _color.size()*sizeof(QVector3D),
+            normalSize = _normal.size()*sizeof(QVector3D), texCoordSize = _texture.size()*sizeof(GLfloat);
+
     vao.create();
 
     vao.bind();
@@ -73,8 +105,6 @@ void TriangleWindow::initialize()
     vbo.setUsagePattern(QOpenGLBuffer::StaticDraw);
     vbo.bind();
 
-    size_t verticesSize = _map.size()*sizeof(QVector3D), colorsSize = _color.size()*sizeof(QVector3D),
-            normalSize = _normal.size()*sizeof(QVector3D), texCoordSize = _texture.size()*sizeof(GLfloat);
     vbo.allocate(verticesSize + colorsSize + normalSize + texCoordSize);
 
     vbo.bind();
@@ -100,7 +130,7 @@ void TriangleWindow::initialize()
 
     m_program->bind();
     m_program->setUniformValue("ambiant_color", QVector4D(0.7, 0.7, 0.7, 1.0));
-    m_program->setUniformValue("light_direction", QVector4D(1.0, 1.0, 1.0, 1.0));
+    m_program->setUniformValue("light_direction", QVector4D(0.0, 0.0, 1.0, 1.0));
     m_program->release();
 
     glEnable(GL_DEPTH_TEST);
@@ -115,7 +145,6 @@ void TriangleWindow::generateTerrain()
     GLfloat y3;
     GLfloat y4;
 
-    QImage m_image;
     if (QFile::exists(":/heightmap-2.png")) {
         if(!m_image.load(":/heightmap-2.png"))
         {
@@ -160,27 +189,75 @@ void TriangleWindow::generateTerrain()
             _color.push_back(displayColor(y3));
 
             QVector3D normal = QVector3D::normal(vertex1, vertex2, vertex3);
-            normal.normalize();
             _normal.push_back(normal);
+
+            normal = QVector3D::normal(vertex2, vertex3, vertex1);
             _normal.push_back(normal);
+
+            normal = QVector3D::normal(vertex3, vertex1, vertex2);
             _normal.push_back(normal);
 
             _map.push_back(vertex2);
             _color.push_back(displayColor(y2));
 
-            _map.push_back(vertex3);
-            _color.push_back(displayColor(y3));
-
             QVector3D vertex4((x+1)*scale, y4, (z+1)*scale);
             _map.push_back(vertex4);
             _color.push_back(displayColor(y4));
-            normal = QVector3D::normal(vertex2, vertex2, vertex4);
-            normal.normalize();
+
+            _map.push_back(vertex3);
+            _color.push_back(displayColor(y3));
+
+            normal = QVector3D::normal(vertex2, vertex4, vertex3);
             _normal.push_back(normal);
+
+            normal = QVector3D::normal(vertex4, vertex3, vertex2);
             _normal.push_back(normal);
+
+            normal = QVector3D::normal(vertex3, vertex2, vertex4);
             _normal.push_back(normal);
         }
     }
+}
+
+void TriangleWindow::initFall()
+{
+
+    QVector<QVector3D> particules;
+    QVector<float> ground;
+    QVector<float> fallSpeed;
+
+    for(int i = 0; i < MAX_PARTICULES; i++)
+    {
+        uint id = rand() % _map.size();
+        particules.push_back(QVector3D(_map[id].x(), rand() % PARTICULE_MAX_Y, _map[id].z()));
+        ground.push_back(_map[id].y());
+        fallSpeed.push_back((((float)(rand()) / (float)(RAND_MAX))/10) + 0.1);
+    }
+
+    _fall = new Fall(particules, ground, fallSpeed, timerFall);
+
+    particuleShader = new QOpenGLShaderProgram(this);
+    particuleShader->addShaderFromSourceCode(QOpenGLShader::Vertex, vertexShaderParticule);
+    particuleShader->addShaderFromSourceCode(QOpenGLShader::Fragment, fragmentShaderParticule);
+    particuleShader->link();
+    particulePosAttr = particuleShader->attributeLocation("posAttr");
+    particulePointColor = particuleShader->uniformLocation("color");
+    particulePointSize = particuleShader->uniformLocation("size");
+    particuleMatrixUniform = particuleShader->uniformLocation("matrix");
+
+    fallVao.create();
+    fallVao.bind();
+
+    size_t fallSize = _fall->getParticules().size()*sizeof(QVector3D);
+    fallVbo.create();
+    fallVbo.setUsagePattern(QOpenGLBuffer::StaticDraw);
+    fallVbo.bind();
+    fallVbo.allocate(fallSize);
+    fallVbo.write(0, _fall->getParticules().constData(), fallSize);
+    particuleShader->setAttributeBuffer(particulePosAttr, GL_FLOAT, 0, 3, 0);
+    particuleShader->enableAttributeArray(particulePosAttr);
+
+    fallVao.release();
 }
 
 void TriangleWindow::render()
@@ -189,6 +266,7 @@ void TriangleWindow::render()
     glViewport(0, 0, width() * retinaScale, height() * retinaScale);
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
 
     //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
@@ -211,8 +289,36 @@ void TriangleWindow::render()
     glDrawArrays(GL_TRIANGLES, 0, _map.size());
 
     vao.release();
-
     m_program->release();
+
+    if(allSeasons[currentSeason] == "WINTER")
+    {
+        _fall->setPointSize(3.0);
+        _fall->setFaster(0.0);
+        _fall->setPointColor(QVector4D(1.0, 1.0, 1.0, 1.0));
+    }
+    else if(allSeasons[currentSeason] == "AUTUMN")
+    {
+        _fall->setPointSize(1.0);
+        _fall->setFaster(1.0);
+        _fall->setPointColor(QVector4D(0.0, 0.9, 0.9, 0.5));
+    }
+    else
+        return;
+
+    particuleShader->bind();
+    particuleShader->setUniformValue(particuleMatrixUniform, matrix);
+    particuleShader->setUniformValue(particulePointSize, _fall->getPointSize());
+    particuleShader->setUniformValue(particulePointColor, _fall->getPointColor());
+
+    fallVao.bind();
+    fallVbo.bind();
+    size_t fallSize = _fall->getParticules().size()*sizeof(QVector3D);
+    fallVbo.write(0, _fall->getParticules().constData(), fallSize);
+    glDrawArrays(GL_POINTS, 0, _fall->getParticules().size());
+    fallVao.release();
+
+    particuleShader->release();
 
     ++m_frame;
 }
@@ -250,6 +356,10 @@ void TriangleWindow::keyPressEvent(QKeyEvent *keyEvent)
             break;
         case Qt::Key_A:
             _angle -= 5.0;
+            break;
+        case Qt::Key_C:
+            currentSeason++;
+            currentSeason %= 4;
             break;
     }
     renderNow();
