@@ -13,7 +13,7 @@ Un shader est utilisé pour la map, il y a en tout trois textures, une pour la t
 
 ![alt tag](./birds.png)
 
-Un second shader est également utilisé pour l'eau, qui a également sa propre texture. La position de chaque vertex de l'eau est calculée dans le vertex shader.
+Un second shader est également utilisé pour l'eau, qui a aussi sa propre texture. La position de chaque vertex de l'eau est calculée dans le vertex shader.
 
 ![alt tag](./boat.png)
 
