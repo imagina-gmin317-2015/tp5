@@ -8,8 +8,8 @@
 
 Il n'y a plus qu'une seule fenêtre pour ce TP au lieu des quatre, une fenêtre supplémentaire permettant de changer les saisons est néamoins présente. Attention, elle peut se trouver trop à droite ou derrière la fenêtre principale si l'écran est trop petit.
 
-Pour ce TP, tout à été passé en VAO + VBO, ce qui décharge grandement le processeur, mais qui peut mettre à mal la carte graphique. Cela a également permis de simplifier grandement l'utilisation de shaders.
-Un shader est utilisé pour la map, il y a en tout trois textures, une pour la terre, une pour la pierre et une pour la neige. 
+Pour ce TP, tout a été passé en VAO + VBO, ce qui décharge grandement le processeur, mais qui peut mettre à mal la carte graphique. Cela a également permis de simplifier grandement l'utilisation de shaders.
+Un shader est utilisé pour la map, il y a en tout trois textures, une pour l'herbe, une pour la terre et une pour la neige. 
 
 ![alt tag](./birds.png)
 
