@@ -39,13 +39,12 @@
 ****************************************************************************/
 
 #include "openglwindow.h"
+
 #include <QtCore/QCoreApplication>
 
 #include <QtGui/QOpenGLContext>
 #include <QtGui/QOpenGLPaintDevice>
 #include <QtGui/QPainter>
-#include <iostream>
-using namespace std;
 
 //! [1]
 OpenGLWindow::OpenGLWindow(QWindow *parent)
@@ -89,7 +88,7 @@ bool OpenGLWindow::event(QEvent *event)
 {
     switch (event->type()) {
     case QEvent::UpdateRequest:
-
+        m_update_pending = false;
         renderNow();
         return true;
     default:
@@ -110,6 +109,7 @@ void OpenGLWindow::exposeEvent(QExposeEvent *event)
 //! [4]
 void OpenGLWindow::renderNow()
 {
+
     if (!isExposed())
         return;
 
@@ -135,5 +135,32 @@ void OpenGLWindow::renderNow()
 
     m_context->swapBuffers(this);
 
+    if (m_animating)
+        renderLater();
+
 }
 
+void OpenGLWindow::newConnection(){
+
+}
+
+void OpenGLWindow::changeSeason(){
+
+}
+
+//TP5
+void OpenGLWindow::setAnimating(bool animating)
+{
+    m_animating = animating;
+
+    if (animating)
+        renderLater();
+}
+
+void OpenGLWindow::renderLater()
+{
+    if (!m_update_pending) {
+        m_update_pending = true;
+        QCoreApplication::postEvent(this, new QEvent(QEvent::UpdateRequest));
+    }
+}

@@ -55,22 +55,28 @@ public:
     explicit OpenGLWindow(QWindow *parent = 0);
     ~OpenGLWindow();
 
-    virtual void render(QPainter *painter);
-    virtual void render();
+    virtual void render(QPainter *painter) Q_DECL_OVERRIDE;
+    virtual void render() Q_DECL_OVERRIDE;
 
     virtual void initialize();
 
-
+    virtual void setAnimating(bool animating);
 public slots:
     void renderNow();
+
+   virtual void newConnection();
+   virtual void changeSeason();
+
 protected:
 
     bool event(QEvent *event);
 
     void exposeEvent(QExposeEvent *event);
+    void renderLater();
 
 private:
-
+    bool m_update_pending;
+    bool m_animating;
 
     QOpenGLContext *m_context;
     QOpenGLPaintDevice *m_device;

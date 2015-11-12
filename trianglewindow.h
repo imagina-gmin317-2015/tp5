@@ -1,12 +1,30 @@
-#ifndef TRIANGLEWINDOW_H
-#define TRIANGLEWINDOW_H
+#ifndef TRIANGLEWINDOW
+#define TRIANGLEWINDOW
 
-#include "openglwindow.h"
 
-struct point
-{
-    float x, y ,z;
-};
+
+#include <QtGui/QGuiApplication>
+#include <QtGui/QMatrix4x4>
+#include <QtGui/QOpenGLShaderProgram>
+#include <QtGui/QScreen>
+
+#include <QtCore/qmath.h>
+#include <QMouseEvent>
+#include <QKeyEvent>
+#include <time.h>
+#include <sys/time.h>
+#include <iostream>
+
+#include <QtCore>
+#include <QtGui>
+#include <QtNetwork/QTcpServer>
+#include <QtNetwork/QTcpSocket>
+#include <QThread>
+
+#include "point.h"
+#include "ply.h"
+#include "particules.h"
+
 
 class paramCamera
 {
@@ -16,16 +34,16 @@ public:
     float ss = 1.0f;
     float anim = 0.0f;
 
-    int etat = 0;
+    int etat = 1;
 };
+
 
 class TriangleWindow : public OpenGLWindow
 {
-Q_OBJECT
-
 public:
     TriangleWindow();
     TriangleWindow(int maj);
+    TriangleWindow(bool);
     void initialize();
     void render();
     bool event(QEvent *event);
@@ -41,31 +59,78 @@ public:
     void displayColor(float);
 
     void loadMap(QString localPath);
-    void updateParticlesAut();
-    void updateParticlesHiv();
     paramCamera* c;
 
-    void setSeason(int );
+    //TP3
+    void displaySeasons();
+    void setSeason(int,bool);
 
-public slots:
-    void updateSeason();
+    //TP4
+    paramCamera *getCamera();
+    int getSeason();
+    Point** getPoints();
+    void setPoints(Point**);
+    int getNbPoints();
+    void setNbPoints(int);
+    int getWidthPoint();
+    void setWidthPoint(int);
+    int getHeightPoint();
+    void setHeightPoint(int);
+
+    Particules* getParticules();
+    void setParticules(Particules*);
+
+    Ply** getPolygones();
+    void setPolygones(Ply**);
+    int getNbPolygones();
+    void setNbPolygones(int);
+    void addPolygone(Ply*);
+    void displayPolygones(int);
+
+    void setColors(GLfloat**);
+    GLfloat** getColors();
+
 
 private:
-    int nbTick = 0;
-    int m_frame = 0;
-    int season, day;
-    point* particules;
     bool master = false;
-
+    int m_frame;
     QImage m_image;
-    point *p;
-    int carte=1;
+    int widthPoint;
+    int heightPoint;
+    int nbPoints;
+    Point **p;
+
+
+    int carte=0;
+
+
     int maj = 20;
 
     QTimer *timer;
-    QTimer *timerFPS;
+
+
+    //Tp3
+    int season = 0;
+    QTimer *timerFiveMinutes;
+    QTcpServer *server;
+    QTcpSocket *socket;
+
+    std::vector<QTcpSocket*> sockets;
+
+    Particules *particules;
+
+    //TP4
+    Ply** polygones;
+    int nbPolygones;
+
+    GLfloat** colors;
+
+
+public slots:
+    void newConnection();
+    void changeSeason();
 };
 
 
+#endif // TRIANGLEWINDOW
 
-#endif // TRIANGLEWINDOW_H

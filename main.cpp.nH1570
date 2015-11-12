@@ -115,7 +115,7 @@ int main(int argc, char **argv)
 
         //Texture
 
-        TriangleTP5 window(1);
+        TriangleTP5 window(3);
         window.setFormat(format);
         window.resize(640, 480);
         window.show();

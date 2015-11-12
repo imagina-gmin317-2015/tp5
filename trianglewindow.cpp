@@ -1,34 +1,30 @@
 #include "trianglewindow.h"
 
-#include <QtGui/QGuiApplication>
-#include <QtGui/QMatrix4x4>
-#include <QtGui/QOpenGLShaderProgram>
-#include <QtGui/QScreen>
-
-#include <QtCore/qmath.h>
-#include <QMouseEvent>
-#include <QKeyEvent>
-#include <time.h>
-#include <sys/time.h>
-#include <iostream>
-
-#include <QtCore>
-#include <QtGui>
-
-#include <omp.h>
-
-int numParticules = 5000;
-int minP = 0;
-int maxP = 360;
-
-
 using namespace std;
 
-TriangleWindow::TriangleWindow()
-{
-    nbTick = 0;
-    m_frame = 0;
-    maj = 20;
+
+
+void TriangleWindow::changeSeason(){
+    for(int i = 0 ; i < sockets.size() ; i++){
+        sockets.at(i)->write("season");
+    }
+    season++;
+    season %= 4;
+    setSeason(season,false);
+    //qDebug()<<"Je suis à la saison "<<season<<endl;
+}
+
+void TriangleWindow::newConnection(){
+
+    socket = server->nextPendingConnection();
+    if(socket->state() == QTcpSocket::ConnectedState)
+    {
+        //qDebug()<<socket->peerAddress();
+    }
+    sockets.push_back(socket);
+}
+
+TriangleWindow::TriangleWindow(bool load){
     QString s ("FPS : ");
     s += QString::number(1000/maj);
     s += "(";
@@ -39,12 +35,49 @@ TriangleWindow::TriangleWindow()
     timer->connect(timer, SIGNAL(timeout()),this, SLOT(renderNow()));
     timer->start(maj);
 
-    master = true;
+    timerFiveMinutes = new QTimer();
+    timerFiveMinutes->connect(timerFiveMinutes, SIGNAL(timeout()),this,SLOT(changeSeason()));
+    timerFiveMinutes->setInterval(1000*5);
+    timerFiveMinutes->start();
+    server = NULL;
+    socket = NULL;
+
+    particules = new Particules();
+    nbPolygones = 0;
 }
+
+TriangleWindow::TriangleWindow()
+{
+    QString s ("FPS : ");
+    s += QString::number(1000/maj);
+    s += "(";
+    s += QString::number(maj);
+    s += ")";
+    setTitle(s);
+    timer = new QTimer();
+    timer->connect(timer, SIGNAL(timeout()),this, SLOT(renderNow()));
+    timer->start(maj);
+
+    timerFiveMinutes = new QTimer();
+    timerFiveMinutes->connect(timerFiveMinutes, SIGNAL(timeout()),this,SLOT(changeSeason()));
+    timerFiveMinutes->setInterval(1000*5);
+    timerFiveMinutes->start();
+
+     master = true;
+     server = new QTcpServer(this);
+     socket = NULL;
+
+     connect(server, SIGNAL(newConnection()), this, SLOT(newConnection()));
+     server->listen(QHostAddress::Any, 4567);
+     //sockets = new std::vector<QTcpSocket*>();
+
+     loadMap(":/heightmap-1.png");
+     nbPolygones = 0;
+}
+
 TriangleWindow::TriangleWindow(int _maj)
 {
-    nbTick = 0;
-    m_frame = 0;
+
     maj = _maj;
     QString s ("FPS : ");
     s += QString::number(1000/maj);
@@ -55,26 +88,21 @@ TriangleWindow::TriangleWindow(int _maj)
     timer = new QTimer();
     timer->connect(timer, SIGNAL(timeout()),this, SLOT(renderNow()));
     timer->start(maj);
-}
 
-void TriangleWindow::setSeason(int i)
-{
-    season = i;
+    socket = new QTcpSocket(this);
+    server = NULL;
 
-    if (i==0) day=80;
-    else if (i==1) day = 170;
-    else if (i==2) day = 260;
-    else if (i==3) day = 350;
-}
+    socket->connectToHost(/*socket->localAddress()*/"127.0.0.1",4567);
 
-void TriangleWindow::updateSeason()
-{
-    day = (day + 1) % 365;
+    if(socket->waitForConnected(5000)){
+        //qDebug("La connection est établie, bravo Vincent!");
+    }else{
+        //qDebug("La connection n'est pas établie, mais tu avance!");
+    }
 
-    if (day==80) season = 0;
-    else if (day==170) season = 1;
-    else if (day==260) season = 2;
-    else if (day==350) season = 3;
+    loadMap(":/heightmap-1.png");
+    nbPolygones = 0;
+
 }
 
 
@@ -91,32 +119,7 @@ void TriangleWindow::initialize()
     glOrtho(-1.0, 1.0, -1.0, 1.0, -100.0, 100.0);
 
 
-    loadMap(":/heightmap-1.png");
-
-    particules = new point[numParticules];
-
-    for(int i = 0; i < numParticules; i++)
-    {
-        int angle = minP + (rand() % (int)(maxP - minP + 1));
-        int dist = (rand() % (int)(100));
-        int alt = (rand() % (int)(100));
-        float x = dist*sin(
-                      ((3.14159 * 2) *
-                       angle
-                       )/360
-                      );
-        float y = dist*cos(
-                      ((3.14159 * 2) *
-                       angle
-                       )/360
-                      );
-
-        // x and y are in (-100,100)
-
-        particules[i].x = (float)(x)/(m_image.width());
-        particules[i].y = (float)(y)/(m_image.height());
-        particules[i].z = (float)(alt)/100;
-    }
+    //loadMap(":/heightmap-1.png");
 
 }
 
@@ -129,7 +132,10 @@ void TriangleWindow::loadMap(QString localPath)
 
 
     uint id = 0;
-    p = new point[m_image.width() * m_image.height()];
+    widthPoint = m_image.width();
+    heightPoint = m_image.height();
+    nbPoints = widthPoint * heightPoint;
+    p = (Point**)malloc(sizeof(Point*) * nbPoints);
     QRgb pixel;
     for(int i = 0; i < m_image.width(); i++)
     {
@@ -140,39 +146,18 @@ void TriangleWindow::loadMap(QString localPath)
 
             id = i*m_image.width() +j;
 
-            p[id].x = (float)i/(m_image.width()) - ((float)m_image.width()/2.0)/m_image.width();
-            p[id].y = (float)j/(m_image.height()) - ((float)m_image.height()/2.0)/m_image.height();
-            p[id].z = 0.001f * (float)(qRed(pixel));
-
+            p[id] = new Point();
+            p[id]->setX((float)i/(m_image.width()) - ((float)m_image.width()/2.0)/m_image.width());
+            p[id]->setY((float)j/(m_image.height()) - ((float)m_image.height()/2.0)/m_image.height());
+            p[id]->setZ(0.001f * (float)(qRed(pixel)));
         }
     }
 }
 
 void TriangleWindow::render()
 {
-    nbTick += maj;
 
-    if(nbTick >= 1000)
-    {
-        QString s ("FPS : ");
-        s += QString::number(m_frame);
-        s += "(th=";
-        s += QString::number(1000/maj);
-        s += "-";
-        s += QString::number(maj);
-        s += ")";
-        s += " day ";
-        s += QString::number(day);
-        if (season==0) s += " Printemps ";
-        else if (season==1) s += " Eté ";
-        if (season==2) s += " Automne ";
-        if (season==3) s += " Hiver ";
-        setTitle(s);
-        nbTick = 0;
-        m_frame = 0;
-    }
     glClear(GL_COLOR_BUFFER_BIT);
-
 
     glLoadIdentity();
     glScalef(c->ss,c->ss,c->ss);
@@ -188,41 +173,46 @@ void TriangleWindow::render()
         if(master)
             c->anim +=0.05f;
     }
-
-
-
     switch(c->etat)
     {
-        case 0:
-            displayPoints();
-            break;
-        case 1:
-            displayLines();
-            break;
-        case 2:
-            displayTriangles();
-            break;
-        case 3:
-            displayTrianglesC();
-            break;
-        case 4:
-            displayTrianglesTexture();
-            break;
-        case 5:
-
-            displayTrianglesTexture();
-            displayLines();
-            break;
-        default:
-            displayPoints();
-            break;
+    case 0:
+        displayPoints();
+        displayPolygones(1);
+        break;
+    case 1:
+        displayLines();
+        displayPolygones(2);
+        break;
+    case 2:
+        displayTriangles();
+        displayPolygones(2);
+        break;
+    case 3:
+        displayTrianglesC();
+        displayPolygones(2);
+        break;
+    case 4:
+        displayTrianglesTexture();
+        displayPolygones(0);
+        break;
+    case 5:
+        displayTrianglesTexture();
+        displayLines();
+        displayPolygones(0);
+        break;
+    default:
+        displayPoints();
+        displayPolygones(0);
+        break;
     }
-    if (season == 2)
-        updateParticlesAut();
-    else if (season == 3)
-        updateParticlesHiv();
-
-    m_frame++;
+    ++m_frame;
+    if(server == NULL && socket != NULL){
+        if(socket->readAll() == "season"){
+            season ++;
+            season %= 4;
+            setSeason(season,false);
+        }
+    }
 
 }
 
@@ -230,11 +220,11 @@ bool TriangleWindow::event(QEvent *event)
 {
     switch (event->type())
     {
-        case QEvent::UpdateRequest:
-            renderNow();
-            return true;
-        default:
-            return QWindow::event(event);
+    case QEvent::UpdateRequest:
+        renderNow();
+        return true;
+    default:
+        return QWindow::event(event);
     }
 }
 
@@ -242,82 +232,89 @@ void TriangleWindow::keyPressEvent(QKeyEvent *event)
 {
     switch(event->key())
     {
+    case 'C':
+        if(c->anim == 0.0f)
+            c->anim = c->rotY;
+        else
+            c->anim = 0.0f;
+        break;
+    case 'Z':
+        c->ss += 0.10f;
+        break;
+    case 'S':
+        c->ss -= 0.10f;
+        break;
+    case 'A':
+        c->rotX += 1.0f;
+        break;
+    case 'E':
+        c->rotX -= 1.0f;
+        break;
+    case 'Q':
+        c->rotY += 1.0f;
+        break;
+    case 'D':
+        c->rotY -= 1.0f;
+        break;
+    case 'W':
+        c->etat ++;
+        if(c->etat > 5)
+            c->etat = 0;
+        break;
+    case 'P':
+        maj++;
+        timer->stop();
+        timer->start(maj);
+        break;
+    case 'O':
+        maj--;
+        if(maj < 1)
+            maj = 1;
+        timer->stop();
+        timer->start(maj);
+        break;
+    case 'L':
+        maj = maj - 20;
+        if(maj < 1)
+            maj = 1;
+        timer->stop();
+        timer->start(maj);
+        break;
+    case 'M':
+        maj = maj + 20;
 
-        case 'C':
-            if(c->anim == 0.0f)
-                c->anim = c->rotY;
-            else
-                c->anim = 0.0f;
-            break;
-        case 'Z':
-            c->ss += 0.10f;
-            break;
-        case 'S':
-            c->ss -= 0.10f;
-            break;
-        case 'A':
-            c->rotX += 1.0f;
-            break;
-        case 'E':
-            c->rotX -= 1.0f;
-            break;
-        case 'Q':
-            c->rotY += 1.0f;
-            break;
-        case 'D':
-            c->rotY -= 1.0f;
-            break;
-        case 'W':
-            c->etat ++;
-            if(c->etat > 5)
-                c->etat = 0;
-            break;
-        case 'P':
-            maj++;
-            timer->stop();
-            timer->start(maj);
-            break;
-        case 'O':
-            maj--;
-            if(maj < 1)
-                maj = 1;
-            timer->stop();
-            timer->start(maj);
-            break;
-        case 'L':
-            maj = maj - 20;
-            if(maj < 1)
-                maj = 1;
-            timer->stop();
-            timer->start(maj);
-            break;
-        case 'M':
-            maj = maj + 20;
+        timer->stop();
+        timer->start(maj);
+        break;
+    case 'X':
+        carte ++;
+        if(carte > 3)
+            carte = 1;
+        QString depth (":/heightmap-");
+        depth += QString::number(carte) ;
+        depth += ".png" ;
 
-            timer->stop();
-            timer->start(maj);
-            break;
-        case 'X':
-            carte ++;
-            if(carte > 3)
-                carte = 1;
-            QString depth (":/heightmap-");
-            depth += QString::number(carte) ;
-            depth += ".png" ;
-
-            loadMap(depth);
-            break;
-
-
+        loadMap(depth);
+        break;
     }
-
+    QString s ("FPS : ");
+    s += QString::number(1000/maj);
+    s += "(";
+    s += QString::number(maj);
+    s += ")";
+    setTitle(s);
 }
 
 
 void TriangleWindow::displayPoints()
 {
-    glColor3f(1.0f, 1.0f, 1.0f);
+    //glColor3f(1.0f, 1.0f, 1.0f);
+    displaySeasons();
+    glPointSize(1);
     glBegin(GL_POINTS);
+
+
+/*
     uint id = 0;
     for(int i = 0; i < m_image.width(); i++)
     {
@@ -325,11 +322,17 @@ void TriangleWindow::displayPoints()
         {
             id = i*m_image.width() +j;
             glVertex3f(
-                       p[id].x,
-                       p[id].y,
-                       p[id].z);
+                        p[id]->getX(),
+                        p[id]->getY(),
+                        p[id]->getZ());
 
         }
+    }*/
+    for(int i = 0; i < nbPoints; i++){
+        glColor3f(colors[i][0],colors[i][1],colors[i][2]);
+        glVertex3f(p[i]->getX(),
+                   p[i]->getY(),
+                   p[i]->getZ());
     }
     glEnd();
 }
@@ -337,53 +340,54 @@ void TriangleWindow::displayPoints()
 
 void TriangleWindow::displayTriangles()
 {
-    if (season==0) glColor3f(0.5f, 0.8f, 0.5f);
-    else if (season==1) glColor3f(0.8f,0.5f, 0.5f);
-    else if (season==2) glColor3f(0.5f, 0.5f, 0.8f);
-    else if (season==3) glColor3f(1.0f, 1.0f, 1.0f);
-
-
+    //glColor3f(1.0f, 1.0f, 1.0f);
+    displaySeasons();
     glBegin(GL_TRIANGLES);
     uint id = 0;
-
-    for(int i = 0; i < m_image.width()-1; i++)
+    for(int i = 0; i < widthPoint-1; i++)
     {
-        for(int j = 0; j < m_image.height()-1; j++)
+        for(int j = 0; j < heightPoint-1; j++)
         {
 
-            id = i*m_image.width() +j;
+            id = i*widthPoint +j;
+            glColor3f(colors[id][0],colors[id][1],colors[id][2]);
             glVertex3f(
-                       p[id].x,
-                       p[id].y,
-                       p[id].z);
-            id = i*m_image.width() +(j+1);
+                        p[id]->getX(),
+                        p[id]->getY(),
+                        p[id]->getZ());
+            id = i*widthPoint +(j+1);
+            glColor3f(colors[id][0],colors[id][1],colors[id][2]);
             glVertex3f(
-                       p[id].x,
-                       p[id].y,
-                       p[id].z);
-            id = (i+1)*m_image.width() +j;
+                        p[id]->getX(),
+                        p[id]->getY(),
+                        p[id]->getZ());
+            id = (i+1)*widthPoint +j;
+            glColor3f(colors[id][0],colors[id][1],colors[id][2]);
             glVertex3f(
-                       p[id].x,
-                       p[id].y,
-                       p[id].z);
+                        p[id]->getX(),
+                        p[id]->getY(),
+                        p[id]->getZ());
 
 
 
-            id = i*m_image.width() +(j+1);
+            id = i*widthPoint +(j+1);
+            glColor3f(colors[id][0],colors[id][1],colors[id][2]);
             glVertex3f(
-                       p[id].x,
-                       p[id].y,
-                       p[id].z);
-            id = (i+1)*m_image.width() +j+1;
+                        p[id]->getX(),
+                        p[id]->getY(),
+                        p[id]->getZ());
+            id = (i+1)*widthPoint +j+1;
+            glColor3f(colors[id][0],colors[id][1],colors[id][2]);
             glVertex3f(
-                       p[id].x,
-                       p[id].y,
-                       p[id].z);
-            id = (i+1)*m_image.width() +j;
+                        p[id]->getX(),
+                        p[id]->getY(),
+                        p[id]->getZ());
+            id = (i+1)*widthPoint +j;
+            glColor3f(colors[id][0],colors[id][1],colors[id][2]);
             glVertex3f(
-                       p[id].x,
-                       p[id].y,
-                       p[id].z);
+                        p[id]->getX(),
+                        p[id]->getY(),
+                        p[id]->getZ());
         }
     }
 
@@ -392,48 +396,56 @@ void TriangleWindow::displayTriangles()
 
 void TriangleWindow::displayTrianglesC()
 {
-    glColor3f(1.0f, 1.0f, 1.0f);
+
+    //glColor3f(1.0f, 1.0f, 1.0f);
+    displaySeasons();
     glBegin(GL_TRIANGLES);
     uint id = 0;
 
-    for(int i = 0; i < m_image.width()-1; i++)
+    for(int i = 0; i < widthPoint-1; i++)
     {
-        for(int j = 0; j < m_image.height()-1; j++)
+        for(int j = 0; j < heightPoint-1; j++)
         {
-            glColor3f(0.0f, 1.0f, 0.0f);
-            id = i*m_image.width() +j;
+
+            id = i*widthPoint +j;
+            glColor3f(colors[id][0],colors[id][1],colors[id][2]);
             glVertex3f(
-                       p[id].x,
-                       p[id].y,
-                       p[id].z);
-            id = i*m_image.width() +(j+1);
+                        p[id]->getX(),
+                        p[id]->getY(),
+                        p[id]->getZ());
+            id = i*widthPoint +(j+1);
+            glColor3f(colors[id][0],colors[id][1],colors[id][2]);
             glVertex3f(
-                       p[id].x,
-                       p[id].y,
-                       p[id].z);
-            id = (i+1)*m_image.width() +j;
+                        p[id]->getX(),
+                        p[id]->getY(),
+                        p[id]->getZ());
+            id = (i+1)*widthPoint +j;
+            glColor3f(colors[id][0],colors[id][1],colors[id][2]);
             glVertex3f(
-                       p[id].x,
-                       p[id].y,
-                       p[id].z);
+                        p[id]->getX(),
+                        p[id]->getY(),
+                        p[id]->getZ());
 
 
-            glColor3f(1.0f, 1.0f, 1.0f);
-            id = i*m_image.width() +(j+1);
+
+            id = i*widthPoint +(j+1);
+            glColor3f(colors[id][0],colors[id][1],colors[id][2]);
             glVertex3f(
-                       p[id].x,
-                       p[id].y,
-                       p[id].z);
-            id = (i+1)*m_image.width() +j+1;
+                        p[id]->getX(),
+                        p[id]->getY(),
+                        p[id]->getZ());
+            id = (i+1)*widthPoint +j+1;
+            glColor3f(colors[id][0],colors[id][1],colors[id][2]);
             glVertex3f(
-                       p[id].x,
-                       p[id].y,
-                       p[id].z);
-            id = (i+1)*m_image.width() +j;
+                        p[id]->getX(),
+                        p[id]->getY(),
+                        p[id]->getZ());
+            id = (i+1)*widthPoint +j;
+            glColor3f(colors[id][0],colors[id][1],colors[id][2]);
             glVertex3f(
-                       p[id].x,
-                       p[id].y,
-                       p[id].z);
+                        p[id]->getX(),
+                        p[id]->getY(),
+                        p[id]->getZ());
         }
     }
     glEnd();
@@ -442,70 +454,81 @@ void TriangleWindow::displayTrianglesC()
 
 void TriangleWindow::displayLines()
 {
-    glColor3f(1.0f, 1.0f, 1.0f);
+    //glColor3f(1.0f, 1.0f, 1.0f);
+    displaySeasons();
     glBegin(GL_LINES);
     uint id = 0;
 
-    for(int i = 0; i < m_image.width()-1; i++)
+    for(int i = 0; i < widthPoint-1; i++)
     {
-        for(int j = 0; j < m_image.height()-1; j++)
+        for(int j = 0; j < heightPoint-1; j++)
         {
 
-            id = i*m_image.width() +j;
+            id = i*widthPoint +j;
+            glColor3f(colors[id][0],colors[id][1],colors[id][2]);
             glVertex3f(
-                       p[id].x,
-                       p[id].y,
-                       p[id].z);
-            id = i*m_image.width() +(j+1);
+                        p[id]->getX(),
+                        p[id]->getY(),
+                        p[id]->getZ());
+            id = i*widthPoint +(j+1);
+            glColor3f(colors[id][0],colors[id][1],colors[id][2]);
             glVertex3f(
-                       p[id].x,
-                       p[id].y,
-                       p[id].z);
+                        p[id]->getX(),
+                        p[id]->getY(),
+                        p[id]->getZ());
 
-            id = (i+1)*m_image.width() +j;
+            id = (i+1)*widthPoint +j;
+            glColor3f(colors[id][0],colors[id][1],colors[id][2]);
             glVertex3f(
-                       p[id].x,
-                       p[id].y,
-                       p[id].z);
-            id = i*m_image.width() +j;
+                        p[id]->getX(),
+                        p[id]->getY(),
+                        p[id]->getZ());
+            id = i*widthPoint +j;
+            glColor3f(colors[id][0],colors[id][1],colors[id][2]);
             glVertex3f(
-                       p[id].x,
-                       p[id].y,
-                       p[id].z);
+                        p[id]->getX(),
+                        p[id]->getY(),
+                        p[id]->getZ());
 
-            id = (i+1)*m_image.width() +j;
+            id = (i+1)*widthPoint +j;
+            glColor3f(colors[id][0],colors[id][1],colors[id][2]);
             glVertex3f(
-                       p[id].x,
-                       p[id].y,
-                       p[id].z);
-            id = i*m_image.width() +(j+1);
+                        p[id]->getX(),
+                        p[id]->getY(),
+                        p[id]->getZ());
+            id = i*widthPoint +(j+1);
+            glColor3f(colors[id][0],colors[id][1],colors[id][2]);
             glVertex3f(
-                       p[id].x,
-                       p[id].y,
-                       p[id].z);
+                        p[id]->getX(),
+                        p[id]->getY(),
+                        p[id]->getZ());
 
-            id = i*m_image.width() +(j+1);
+            id = i*widthPoint +(j+1);
+            glColor3f(colors[id][0],colors[id][1],colors[id][2]);
             glVertex3f(
-                       p[id].x,
-                       p[id].y,
-                       p[id].z);
-            id = (i+1)*m_image.width() +j+1;
+                        p[id]->getX(),
+                        p[id]->getY(),
+                        p[id]->getZ());
+            id = (i+1)*widthPoint +j+1;
+            glColor3f(colors[id][0],colors[id][1],colors[id][2]);
             glVertex3f(
-                       p[id].x,
-                       p[id].y,
-                       p[id].z);
+                        p[id]->getX(),
+                        p[id]->getY(),
+                        p[id]->getZ());
 
-            id = (i+1)*m_image.width() +j+1;
+            id = (i+1)*widthPoint +j+1;
+            glColor3f(colors[id][0],colors[id][1],colors[id][2]);
             glVertex3f(
-                       p[id].x,
-                       p[id].y,
-                       p[id].z);
+                        p[id]->getX(),
+                        p[id]->getY(),
+                        p[id]->getZ());
 
-            id = (i+1)*m_image.width() +(j);
+            id = (i+1)*widthPoint +(j);
+            glColor3f(colors[id][0],colors[id][1],colors[id][2]);
             glVertex3f(
-                       p[id].x,
-                       p[id].y,
-                       p[id].z);
+                        p[id]->getX(),
+                        p[id]->getY(),
+                        p[id]->getZ());
         }
     }
 
@@ -514,54 +537,61 @@ void TriangleWindow::displayLines()
 
 void TriangleWindow::displayTrianglesTexture()
 {
-    glColor3f(1.0f, 1.0f, 1.0f);
+    //glColor3f(1.0f, 1.0f, 1.0f);
+    displaySeasons();
     glBegin(GL_TRIANGLES);
     uint id = 0;
 
-    for(int i = 0; i < m_image.width()-1; i++)
+    for(int i = 0; i < widthPoint-1; i++)
     {
-        for(int j = 0; j < m_image.height()-1; j++)
+        for(int j = 0; j < heightPoint-1; j++)
         {
 
-            id = i*m_image.width() +j;
-            displayColor(p[id].z);
+            id = i*widthPoint +j;
+            //displayColor(p[id]->getZ());
+            displaySeasons();
             glVertex3f(
-                       p[id].x,
-                       p[id].y,
-                       p[id].z);
-            id = i*m_image.width() +(j+1);
-            displayColor(p[id].z);
+                        p[id]->getX(),
+                        p[id]->getY(),
+                        p[id]->getZ());
+            id = i*widthPoint +(j+1);
+           // displayColor(p[id]->getZ());
+            displaySeasons();
             glVertex3f(
-                       p[id].x,
-                       p[id].y,
-                       p[id].z);
-            id = (i+1)*m_image.width() +j;
-            displayColor(p[id].z);
+                        p[id]->getX(),
+                        p[id]->getY(),
+                        p[id]->getZ());
+            id = (i+1)*widthPoint +j;
+            //displayColor(p[id]->getZ());
+            displaySeasons();
             glVertex3f(
-                       p[id].x,
-                       p[id].y,
-                       p[id].z);
+                        p[id]->getX(),
+                        p[id]->getY(),
+                        p[id]->getZ());
 
 
 
-            id = i*m_image.width() +(j+1);
-            displayColor(p[id].z);
+            id = i*widthPoint +(j+1);
+            //displayColor(p[id]->getZ());
+            displaySeasons();
             glVertex3f(
-                       p[id].x,
-                       p[id].y,
-                       p[id].z);
-            id = (i+1)*m_image.width() +j+1;
-            displayColor(p[id].z);
+                        p[id]->getX(),
+                        p[id]->getY(),
+                        p[id]->getZ());
+            id = (i+1)*widthPoint +j+1;
+           // displayColor(p[id]->getZ());
+            displaySeasons();
             glVertex3f(
-                       p[id].x,
-                       p[id].y,
-                       p[id].z);
-            id = (i+1)*m_image.width() +j;
-            displayColor(p[id].z);
+                        p[id]->getX(),
+                        p[id]->getY(),
+                        p[id]->getZ());
+            id = (i+1)*widthPoint +j;
+            //displayColor(p[id]->getZ());
+            displaySeasons();
             glVertex3f(
-                       p[id].x,
-                       p[id].y,
-                       p[id].z);
+                        p[id]->getX(),
+                        p[id]->getY(),
+                        p[id]->getZ());
         }
     }
     glEnd();
@@ -589,117 +619,319 @@ void TriangleWindow::displayColor(float alt)
 
 }
 
+//TP3
+void TriangleWindow::setSeason(int i, bool charge){
+    season = i;
 
-void TriangleWindow::updateParticlesAut()
-{
-    int id2;
-#pragma omp parallel
-    {
-#pragma omp for
-        for(int id = 0; id < numParticules; id++)
-        {
-            particules[id].z -= 0.0003f * ((float) minP + (rand() % (int)(maxP - minP + 1)));
-            id2 = m_image.width()*m_image.width()/4 + (particules[id].x)*m_image.width() + particules[id].y;
 
-            if (id2<0)
-                qDebug() << "error x = " << particules[id].x << "  / " << m_image.width() << " y = " << particules[id].y << " / " << m_image.height();
 
-            if (id2>m_image.width()*m_image.height())
-                qDebug() << "error x = " << particules[id].x << "  / " << m_image.width() << " y = " << particules[id].y << " / " << m_image.height();
 
-            // restart when touching the ground
-            if(particules[id].z < p[id2].z)
-            {
-                int angle =minP + (rand() % (int)(maxP - minP + 1));
-                int dist = (rand() % (int)(100 ));
-                int alt = (rand() % (int)(100));
-                float x = dist*sin(
-                              ((3.14159 * 2) *
-                               angle
-                               )/360
-                              );
-                float y = dist*cos(
-                              ((3.14159 * 2) *
-                               angle
-                               )/360
-                              );
+    if(!charge){
+        float min = p[0]->getZ();
+        float max = p[0]->getZ();
+        float moy = 0.0f;
 
-                particules[id].x = (float)(x)/(m_image.width());
-                particules[id].y = (float)(y)/(m_image.height());
-                particules[id].z = (float)(alt)/100;
-
+        colors = (GLfloat**)malloc(sizeof(GLfloat*) * nbPoints);
+        for(int i = 0; i < nbPoints; i++){
+            colors[i] = (GLfloat*)malloc(sizeof(GLfloat) * 3);
+            moy += p[i]->getZ();
+            if(p[i]->getZ() > max){
+                max = p[i]->getZ();
             }
-            // else display the river or cover the round with snow
+            if(p[i]->getZ() < min){
+                min = p[i]->getZ();
+            }
+        }
+        moy /= nbPoints;
+        float ecartBas;
+        float ecartHaut;
+        GLfloat p[3];
+        switch(season){
+        case 0:
+            //Particules
+            particules = new Particules(this->p, nbPoints);
+            p[0] = 0.8f; p[1] = 0.8f; p[2] = 0.8f;
+            particules->setParticuleColor(p);
+            particules->setParticuleSize(2);
+            particules->init(0.04,3,6);
 
+            //Plys
+            if(nbPolygones > 0){
+                for(int j = 0; j < nbPolygones; j++){
+                    polygones[j]->changeModel(":/wintertree.ply");
+                }
+            }
+
+            //Couleurs
+            ecartBas = (max - min ) / 10.0f;
+            ecartHaut = (max - min) / 2.0f;
+            for(int i = 0; i < nbPoints; i++){
+                if(this->p[i]->getZ() < min + ecartBas){//partie basse
+                    colors[i][0] = 127.0f / 255.0f + this->p[i]->getZ()/max;
+                    colors[i][1] = 255.0f / 255.0f + this->p[i]->getZ()/max;
+                    colors[i][2] = 212.0f / 255.0f + this->p[i]->getZ()/max;
+                }else
+                if(this->p[i]->getZ() > max - ecartHaut){//partie haute
+                    colors[i][0] = 254.0f / 255.0f + this->p[i]->getZ()/max;
+                    colors[i][1] = 254.0f / 255.0f + this->p[i]->getZ()/max;
+                    colors[i][2] = 254.0f / 255.0f + this->p[i]->getZ()/max;
+                }
+                else{
+                    colors[i][0] = 150.0f / 255.0f + this->p[i]->getZ()/max;
+                    colors[i][1] = 150.0f / 255.0f + this->p[i]->getZ()/max;
+                    colors[i][2] = 150.0f / 255.0f + this->p[i]->getZ()/max;
+                }
+            }
+            break;
+        case 1:
+            //Particules
+            particules = NULL;
+
+            //Plys
+            if(nbPolygones > 0){
+                for(int j = 0; j < nbPolygones; j++){
+                    polygones[j]->changeModel(":/springtree.ply");
+                }
+            }
+
+            //Couleurs
+            ecartBas = (max - min ) / 10.0f;
+            ecartHaut = (max - min) / 2.0f;
+            for(int i = 0; i < nbPoints; i++){
+                if(this->p[i]->getZ() < min + ecartBas){//partie basse
+                    colors[i][0] = 0.0f / 255.0f + this->p[i]->getZ()/max;
+                    colors[i][1] = 0.0f / 255.0f + this->p[i]->getZ()/max;
+                    colors[i][2] = 100.0f / 255.0f + this->p[i]->getZ()/max;
+                }else
+                if(this->p[i]->getZ() > max - ecartHaut){//partie haute
+                    colors[i][0] = 200.0f / 255.0f + this->p[i]->getZ()/max;
+                    colors[i][1] = 200.0f / 255.0f + this->p[i]->getZ()/max;
+                    colors[i][2] = 200.0f / 255.0f + this->p[i]->getZ()/max;
+                }
+                else{
+                    colors[i][0] = 0.0f / 255.0f + this->p[i]->getZ()/max;
+                    colors[i][1] = 150.0f / 255.0f + this->p[i]->getZ()/max;
+                    colors[i][2] = 0.0f / 255.0f + this->p[i]->getZ()/max;
+                }
+            }
+            break;
+        case 2:
+            //Particules
+            particules = NULL;
+
+            //Plys
+            if(nbPolygones > 0){
+                for(int j = 0; j < nbPolygones; j++){
+                    polygones[j]->changeModel(":/summertree.ply");
+                }
+            }
+
+            //Couleurs
+            ecartBas = (max - min ) / 20.0f;
+            ecartHaut = (max - min) / 2.0f;
+            for(int i = 0; i < nbPoints; i++){
+                if(this->p[i]->getZ() < min + ecartBas){//partie basse
+                    colors[i][0] = 0.0f / 255.0f + this->p[i]->getZ()/max;
+                    colors[i][1] = 238.0f / 255.0f + this->p[i]->getZ()/max;
+                    colors[i][2] = 238.0f / 255.0f + this->p[i]->getZ()/max;
+                }else
+                if(this->p[i]->getZ() > max - ecartHaut){//partie haute
+                    colors[i][0] = 150.0f / 255.0f + this->p[i]->getZ()/max;
+                    colors[i][1] = 150.0f / 255.0f + this->p[i]->getZ()/max;
+                    colors[i][2] = 150.0f / 255.0f + this->p[i]->getZ()/max;
+                }
+                else{
+                    colors[i][0] = 173.0f / 255.0f + this->p[i]->getZ()/max;
+                    colors[i][1] = 255.0f / 255.0f + this->p[i]->getZ()/max;
+                    colors[i][2] = 47.0f / 255.0f + this->p[i]->getZ()/max;
+                }
+            }
+            break;
+        case 3:
+            //Particules
+            particules = new Particules(this->p, nbPoints);
+            p[0] = 0.0f; p[1] = 0.0f; p[2] = 0.8f;
+            particules->setParticuleColor(p);
+            particules->init(0.1,100,1000);
+
+            //Plys
+            if(nbPolygones > 0){
+                for(int j = 0; j < nbPolygones; j++){
+                    polygones[j]->changeModel(":/autumntree.ply");
+                }
+            }
+
+            //Couleurs
+            ecartBas = (max - min ) / 10.0f;
+            ecartHaut = (max - min) / 2.0f;
+            for(int i = 0; i < nbPoints; i++){
+                if(this->p[i]->getZ() < min + ecartBas){//partie basse
+                    colors[i][0] = 0.0f / 255.0f + this->p[i]->getZ()/max;
+                    colors[i][1] = 0.0f / 255.0f + this->p[i]->getZ()/max;
+                    colors[i][2] = 100.0f / 255.0f + this->p[i]->getZ()/max;
+                }else
+                if(this->p[i]->getZ() > max - ecartHaut){//partie haute
+                    colors[i][0] = 200.0f / 255.0f + this->p[i]->getZ()/max;
+                    colors[i][1] = 200.0f / 255.0f + this->p[i]->getZ()/max;
+                    colors[i][2] = 200.0f / 255.0f + this->p[i]->getZ()/max;
+                }
+                else{
+                    colors[i][0] = 139.0f / 255.0f + this->p[i]->getZ()/max;
+                    colors[i][1] = 90.0f / 255.0f + this->p[i]->getZ()/max;
+                    colors[i][2] = 43.0f / 255.0f + this->p[i]->getZ()/max;
+                }
+            }
+            break;
         }
     }
-
-    glColor3f(0.2f, 0.2f, 1.0f);
-    glPointSize(0.01f);
-    glBegin(GL_POINTS);
-    for(int id = 0; id < numParticules; id++)
-    {
-        glVertex3f(
-                   particules[id].x,
-                   particules[id].y,
-                   particules[id].z);
-
-
-    }
-    glEnd();
 }
 
-void TriangleWindow::updateParticlesHiv()
-{
-    int id2;
-#pragma omp parallel
-    {
-#pragma omp for
-        for(int id = 0; id < numParticules; id++)
-        {
-            particules[id].z -= 0.00001f * ((float) minP + (rand() % (int)(maxP - minP + 1)));
-            id2 = m_image.width()*m_image.width()/4 + (particules[id].x)*m_image.width() + particules[id].y;
+void TriangleWindow::displaySeasons(){
 
-            if (id2<0)
-                qDebug() << "error x = " << particules[id].x << "  / " << m_image.width() << " y = " << particules[id].y << " / " << m_image.height();
 
-            if (id2>m_image.width()*m_image.height())
-                qDebug() << "error x = " << particules[id].x << "  / " << m_image.width() << " y = " << particules[id].y << " / " << m_image.height();
 
-            // restart when touching the ground
-            if(particules[id].z < p[id2].z)
-            {
-                int angle =minP + (rand() % (int)(maxP - minP + 1));
-                int dist = (rand() % (int)(100));
-                int alt =  (rand() % (int)(100));
-                float x = dist*sin(
-                              ((3.14159 * 2) *
-                               angle
-                               )/360
-                              );
-                float y = dist*cos(
-                              ((3.14159 * 2) *
-                               angle
-                               )/360
-                              );
+    switch (season){
+    case 0://Hiver
 
-                particules[id].x = (float)(x)/(m_image.width());
-                particules[id].y = (float)(y)/(m_image.height());
-                particules[id].z = (float)(alt)/100;
-            }
+        particules->update();
+        //glColor3f(1.0f, 1.0f, 1.0f);
+        glClearColor(0.5f,0.5f,0.5f,1.0f);
+        break;
+    case 1://Printemps
+        glClearColor(0.75f,0.85f,1.0f,1.0f);
+        //glColor3f(0.0f, 0.75f, 0.0f);
+
+        break;
+    case 2://Ete
+        glClearColor(0.0f,0.5f,0.8f,1.0f);
+        //glColor3f(1.0f, 1.0f, 0.0f);
+
+        break;
+    case 3://Automne
+        glClearColor(0.92f,0.57f,0.13f,1.0f);
+        particules->update();
+        //glColor3f(0.37f, 0.2f, 0.07f);
+
+        break;
+    default:
+        break;
+    }
+}
+
+//TP4
+paramCamera* TriangleWindow::getCamera(){
+    return c;
+}
+
+int TriangleWindow::getSeason(){
+    return season;
+}
+
+Point** TriangleWindow::getPoints(){
+    return p;
+}
+
+void TriangleWindow::setPoints(Point** pt){
+    p = pt;
+}
+
+int TriangleWindow::getNbPoints(){
+    return nbPoints;
+}
+
+void TriangleWindow::setNbPoints(int i){
+    nbPoints = i;
+}
+
+int TriangleWindow::getWidthPoint(){
+    return widthPoint;
+}
+
+void TriangleWindow::setWidthPoint(int w){
+    widthPoint = w;
+}
+
+int TriangleWindow::getHeightPoint(){
+    return heightPoint;
+}
+
+void TriangleWindow::setHeightPoint(int h){
+    heightPoint = h;
+}
+
+
+Particules* TriangleWindow::getParticules(){
+    return particules;
+}
+
+void TriangleWindow::setParticules(Particules* p){
+    particules = p;
+}
+
+Ply** TriangleWindow::getPolygones(){
+    return polygones;
+}
+
+void TriangleWindow::setPolygones(Ply** p){
+    polygones = p;
+}
+
+int TriangleWindow::getNbPolygones(){
+    return nbPolygones;
+}
+
+void TriangleWindow::setNbPolygones(int n){
+    nbPolygones = n;
+}
+
+void TriangleWindow::addPolygone(Ply* p){
+    if(nbPolygones > 0){
+        Ply** pBis = (Ply**)malloc(sizeof(Ply*) * (nbPolygones + 1));
+        for(int i = 0; i < nbPolygones; i++){
+            pBis[i] = polygones[i];
         }
+        pBis[nbPolygones] = p;
+        nbPolygones++;
+        polygones = pBis;
+    }else{
+        nbPolygones = 1;
+        polygones = (Ply**)malloc(sizeof(Ply*));
+        polygones[0] = p;
     }
-    glColor3f(1.0f, 1.0f, 1.0f);
-    glPointSize(0.0001f);
-    glBegin(GL_POINTS);
-    for(int id = 0; id < numParticules; id++)
-    {
-        glVertex3f(
-                   particules[id].x,
-                   particules[id].y,
-                   particules[id].z);
+}
+
+void TriangleWindow::displayPolygones(int choix){
+    switch(choix){
+    case 0:
+        for(int i = 0; i < nbPolygones; i++){
+            polygones[i]->drawPoints();
+        }
+        break;
+    case 1:
+        for(int i = 0; i < nbPolygones; i++){
+            polygones[i]->drawLines();
+        }
+        break;
+    case 2:
+        for(int i = 0; i < nbPolygones; i++){
+            polygones[i]->drawFaces();
+        }
+        break;
+    default:
+        for(int i = 0; i < nbPolygones; i++){
+            polygones[i]->drawPoints();
+        }
+        break;
+    }
 
 
-    }
-    glEnd();
+}
+
+
+void TriangleWindow::setColors(GLfloat** c){
+    colors = c;
+}
+
+GLfloat** TriangleWindow::getColors(){
+    return colors;
 }
