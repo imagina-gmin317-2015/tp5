@@ -1,0 +1,30 @@
+<RCC>
+    <qresource prefix="/">
+        <file>grass.png</file>
+        <file>lava.jpg</file>
+        <file>sand2.jpg</file>
+        <file>sand.jpg</file>
+        <file>water.jpg</file>
+    </qresource>
+    <qresource prefix="/textures"/>
+    <qresource prefix="/shaders"/>
+    <qresource prefix="/shaders/simples/color"/>
+    <qresource prefix="/shaders/simples/texture"/>
+    <qresource prefix="/shaders/simples/light">
+        <file>shaders/simples/light/phong-one-light-shader.fsh</file>
+        <file>shaders/simples/light/phong-one-light-shader.vsh</file>
+        <file>shaders/cel-shading-fragment.fsh</file>
+        <file>shaders/cel-shading-vertex.vsh</file>
+        <file>shaders/cube-environment-map.fsh</file>
+        <file>shaders/cube-environment-map.vsh</file>
+        <file>shaders/diffuse-reflection.fsh</file>
+        <file>shaders/diffuse-reflection.vsh</file>
+        <file>shaders/spherical-environment-map.fsh</file>
+        <file>shaders/spherical-environment-map.vsh</file>
+        <file>shaders/spherical-environment-map2.fsh</file>
+        <file>shaders/spherical-environment-map2.vsh</file>
+        <file>shaders/simples/texture/texture.fsh</file>
+        <file>shaders/simples/texture/texture.vsh</file>
+    </qresource>
+    <qresource prefix="/shaders/simples/multilight"/>
+</RCC>
