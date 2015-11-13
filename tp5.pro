@@ -1,21 +1,10 @@
-#QMAKE_MAC_SDK = macosx10.11
+include(openglwindow.pri)
 
-#QMAKE_CXXFLAGS += -stdlib=libc++ -std=c++11 -fopenmp
-QMAKE_CXXFLAGS += -std=c++11 -fopenmp
+SOURCES += \
+    main.cpp
 
-INCLUDEPATH += /opt/local/include
-INCLUDEPATH += /usr/local/include/libiomp
-
-#LIBS += -stdlib=libc++
-
-SOURCES += $$PWD/openglwindow.cpp \
-    main.cpp \
-    trianglewindow.cpp
-HEADERS += $$PWD/openglwindow.h \
-    trianglewindow.h
-
-target.path = .
-
+target.path = $$[QT_INSTALL_EXAMPLES]/gui/openglwindow
 INSTALLS += target
 
-RESOURCES += gestionnaire.qrc
+RESOURCES += \
+    images.qrc
