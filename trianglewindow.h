@@ -3,69 +3,63 @@
 
 #include "openglwindow.h"
 
-struct point
-{
-    float x, y ,z;
-};
+#include <gl/glu.h>
+#include <QtGui/QGuiApplication>
+#include <QtGui/QOpenGLShaderProgram>
 
-class paramCamera
-{
-public:
-    float rotX = -45.0;
-    float rotY = -45.0;
-    float ss = 1.0f;
-    float anim = 0.0f;
 
-    int etat = 0;
-};
+#define PYRAMIDE 1
+#define ECLAIRAGE_DIFFUS 2
+#define SPHERICAL_ENVIRONMENT_MAPPING 3
+#define NORMAL_MAPPING 4
+#define GEOMETRY_DEFORMATION 5
+
 
 class TriangleWindow : public OpenGLWindow
 {
-Q_OBJECT
-
 public:
-    TriangleWindow();
-    TriangleWindow(int maj);
-    void initialize();
-    void render();
-    bool event(QEvent *event);
+    TriangleWindow(int type);
 
-    void keyPressEvent(QKeyEvent *event);
+    void initialize() Q_DECL_OVERRIDE;
+    void render() Q_DECL_OVERRIDE;
 
-    void displayTriangles();
-    void displayLines();
-    void displayTrianglesC();
-    void displayPoints();
-    void displayTrianglesTexture();
-
-    void displayColor(float);
-
-    void loadMap(QString localPath);
-    void updateParticlesAut();
-    void updateParticlesHiv();
-    paramCamera* c;
-
-    void setSeason(int );
-
-public slots:
-    void updateSeason();
 
 private:
-    int nbTick = 0;
-    int m_frame = 0;
-    int season, day;
-    point* particules;
-    bool master = false;
+    void loadTexture2(char *filename, GLuint &textureID);
+    void textureTriangle2D();
+    void texturePyramide();
+    void sphereEclairageDiffus();
+    void sphereSEM();
+    void sphereNM();
+    void sphereDEF();
 
-    QImage m_image;
-    point *p;
-    int carte=1;
-    int maj = 20;
+    bool first;
 
-    QTimer *timer;
-    QTimer *timerFPS;
+    GLuint m_matrixUniform;
+    GLuint m_cameraPosUniform;
+
+
+    GLuint backgroundimage1;
+    GLuint backgroundimage2;
+    GLuint backgroundimage3;
+    GLuint backgroundimage4;
+    GLuint backgroundimage5;
+    GLuint backgroundSphere;
+
+    GLuint backgroundSEM;
+    GLuint backgroundNM;
+
+    QOpenGLShaderProgram *m_program;
+    QOpenGLShaderProgram *m_programSEM;
+    QOpenGLShaderProgram *m_programNM;
+    QOpenGLShaderProgram *m_programDEF;
+
+    int m_type;
+
+    int m_frame;
 };
 
 
-
 #endif // TRIANGLEWINDOW_H
+
+

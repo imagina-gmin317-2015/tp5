@@ -1,20 +1,37 @@
-QMAKE_MAC_SDK = macosx10.11
-
-QMAKE_CXXFLAGS += -stdlib=libc++ -std=c++11 -fopenmp
-
-INCLUDEPATH += /opt/local/include
-INCLUDEPATH += /usr/local/include/libiomp
-
-LIBS += -stdlib=libc++
-
+INCLUDEPATH += $$PWD
 SOURCES += $$PWD/openglwindow.cpp \
-    main.cpp \
+    gamewindow.cpp \
+    Camera.cpp \
+    filemanager.cpp \
+    objetply3d.cpp \
+    gamewindowshader.cpp \
     trianglewindow.cpp
 HEADERS += $$PWD/openglwindow.h \
+    Camera.h \
+    gamewindow.h \
+    filemanager.h \
+    objetply3d.h \
+    gamewindowshader.h \
     trianglewindow.h
 
-target.path = .
+SOURCES += \
+    main.cpp
 
+target.path = .
 INSTALLS += target
 
-RESOURCES += gestionnaire.qrc
+RESOURCES += \
+    gestionnaire.qrc
+
+QT += network
+QT += opengl
+
+DISTFILES += \
+    Shaders/vertexShader.vsh \
+    Shaders/fragmentShader.fsh \
+    Shaders/SEM_fragmentShader.fsh \
+    Shaders/SEM_vertexShader.vsh \
+    Shaders/NM_fragmentShader.fsh \
+    Shaders/NM_vertexShader.vsh \
+    Shaders/DEF_vertexShader.vsh \
+    Shaders/DEF_fragmentShader.fsh

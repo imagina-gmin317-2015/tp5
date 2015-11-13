@@ -37,6 +37,8 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
+#ifndef OPENGL_WINDOW_H
+#define OPENGL_WINDOW_H
 
 #include <QtGui/QWindow>
 #include <QtGui/QOpenGLFunctions>
@@ -60,9 +62,11 @@ public:
 
     virtual void initialize();
 
-
+    void setAnimating(bool animating);
 public slots:
+    void renderLater();
     void renderNow();
+
 protected:
 
     bool event(QEvent *event);
@@ -70,10 +74,12 @@ protected:
     void exposeEvent(QExposeEvent *event);
 
 private:
-
+    bool m_update_pending;
+    bool m_animating;
 
     QOpenGLContext *m_context;
     QOpenGLPaintDevice *m_device;
 };
 //! [1]
 
+#endif
