@@ -1,0 +1,142 @@
+from openalea.plantgl.all import *
+
+mesh = None
+soil_heigth = 0
+module Visu
+
+Axiom: 
+  global mesh
+  mesh = init()
+  produce Visu
+
+production:
+interpretation:
+Visu :
+  nproduce ,(2) @g(QuadSet([[10,10,-soil_heigth],[10,-10,-soil_heigth],[-10,-10,soil_heigth],[-10,10,soil_heigth]],[range(4)], ccw = False ) )
+  if mesh: 
+    nproduce ,(3) @g(mesh.repr3d())
+
+endlsystem
+
+defaultmass = 100
+
+
+def EndEach():
+  global mesh
+  mesh = step(mesh, dt)
+
+from numpy import *
+
+def indices2edges(indices):
+  edges = set()
+  for face in indices:
+    nbedges = len(face)
+    for i in xrange(nbedges):
+      pi = face[i]
+      pj = face[(i+1)%nbedges]
+      edges.add((min(pi,pj),max(pi,pj)))
+  return list(edges)
+
+class Mesh:
+  def __init__(self, positions, indices):
+    self.positions = positions # Current position of the points
+    self.indices = indices # Triangle to display indices
+    nbpositions = len(positions)  # nb of points
+
+    # determination of edges of the systems to be considered for the springs
+    self.edges = list(indices2edges(indices)) + [(i,nbpositions-1) for i in xrange(nbpositions-1)] 
+   
+    self.velocity = array([[0.,0.,0.] for i in xrange(nbpositions)]) # initiate velocity of particles
+    self.mass = array([defaultmass for i in xrange(nbpositions)])    # initiate mass of particles
+    self.forces = array([[0.,0.,0.] for i in xrange(nbpositions)])   # initiate forces on particles
+
+    self.restlength = [norm(self.positions[pi]-self.positions[pj]) for pi,pj in self.edges] # determine rest length
+  
+  def repr3d(self):
+    return FaceSet(self.positions, self.indices)
+
+  def updateNormals(self):
+    f = self.repr3d()
+    f.computeNormalList()
+    self.normals = f.normalList
+
+derivation length: 1000
+initial_view = 1
+
+dt = 0.01
+gravity = array([0,0,-9.81])
+K = 1000
+Kp = 10000
+Kd = 20
+soil_heigth = 1
+dh = 0.5
+
+initial_heigth = 3
+
+def sphere():
+  s = Sphere(radius = 1)
+  d = Discretizer()
+  s.apply(d)
+  d.result.pointList.append((0,0,0)) # Adding a central point
+  d.result.pointList.translate((0,0,initial_heigth))
+  return d.result  
+
+def init():
+  shape = sphere()
+  return Mesh(shape.pointList,shape.indexList)
+
+def step(mesh, dt): 
+   # external forces : gravity , mass
+   
+   mesh.forces = array([[mesh.mass[i]*gravity[0],mesh.mass[i]*gravity[1],mesh.mass[i]*gravity[2]] for i in xrange(len(mesh.positions))])
+   
+   # internal forces : spring
+   # f += K(l-l0) 
+   
+   currentlength = [norm(mesh.positions[pi]-mesh.positions[pj]) for pi,pj in mesh.edges]   
+   
+   eid = 0
+   for pi,pj in mesh.edges:
+      edge = mesh.positions[pi]-mesh.positions[pj]
+      l = norm(edge)
+      u = edge/l
+      
+      mesh.forces[pi] = mesh.forces[pi] - K * (currentlength[eid]-mesh.restlength[eid])*u
+      mesh.forces[pj] = mesh.forces[pj] + K * (currentlength[eid]-mesh.restlength[eid])*u
+      
+      eid +=1
+   
+   # damping 
+   # apply a force proportional to the inverse of the velocity to each particle
+   # f += -Kd * v 
+   
+   for i in xrange(len(mesh.positions)):
+      mesh.forces[i] = mesh.forces[i] -Kd * mesh.velocity[i]
+
+   # external forces : ground
+   #   If a particle is above an heigth (ground_heigth + a delta dh),
+   #    apply a force proportional to the penetration in the ground 
+   # f += Kp *( (ground_heigth+dh) - z) 
+
+   for i in xrange(len(mesh.positions)):
+      if mesh.positions[i][2] <= (0 + dh):
+         gravity[0] = 600
+         gravity[2] = -10
+         #mesh.forces[i][2] = mesh.forces[i][2] + Kp * ((soil_heigth + dh)-mesh.positions[i][2])
+
+   # determine the position and velocity of each particle 
+   # p(t+dt) = p(t) + v(t) *dt
+   # v(t+dt) = v(t) + f/m * dt 
+   
+   for i in xrange(len(mesh.positions)):
+#      mesh.positions[i] = mesh.positions[i] + mesh.velocity[i] *dt
+#      mesh.velocity[i] = mesh.velocity[i] + mesh.forces[i]/mesh.mass[i] *dt
+      mesh.velocity[i] = mesh.velocity[i] + mesh.forces[i]/mesh.mass[i] *dt   
+      mesh.positions[i] = mesh.positions[i] + mesh.velocity[i] *dt
+   
+   return mesh
+
+
+
+
+
