@@ -2,6 +2,22 @@
     <qresource prefix="/">
         <file>heightmap-1.png</file>
         <file>heightmap-2.png</file>
-        <file>heightmap-3.png</file>                
+        <file>c_autumntree.ply</file>
+        <file>galleon.ply</file>
+        <file>EAGLE_2.ply</file>
+        <file>gull.ply</file>
+        <file>EAGLE_3.ply</file>
+        <file>galleon2.ply</file>
+        <file>grass.jpg</file>
+        <file>heightmap-3.png</file>
+        <file>heightmap-4.png</file>
+        <file>fragment.glsl</file>
+        <file>vertex.glsl</file>
+        <file>rock.jpg</file>
+        <file>snow.jpg</file>
+        <file>water_fragment.glsl</file>
+        <file>water_vertex.glsl</file>
+        <file>water.jpg</file>
+        <file>earth.jpg</file>
     </qresource>
 </RCC>
