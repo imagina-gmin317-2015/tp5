@@ -1,42 +1,5 @@
 #include "trianglewindow.h"
 
-static const char *vertexShaderSource =
-    "attribute highp vec4 posAttr;\n"
-    "attribute lowp vec4 colAttr;\n"
-    "attribute vec4 normal;\n"
-    "varying lowp float col;\n"
-    "varying vec4 color;\n"
-    "uniform highp mat4 matrix;\n"
-    "uniform vec4 light_direction;\n"
-    "void main() {\n"
-    "   color = colAttr;\n"
-    "   col = max(dot(normal, light_direction), 0.0);\n"
-    "   gl_Position = matrix * posAttr;\n"
-    "}\n";
-
-static const char *fragmentShaderSource =
-    "varying lowp float col;\n"
-    "varying vec4 color;\n"
-    "uniform vec4 ambiant_color;\n"
-    "void main() {\n"
-    "   gl_FragColor = color * (ambiant_color * col);\n"
-    "}\n";
-
-static const char *vertexShaderParticule =
-    "attribute highp vec4 posAttr;\n"
-    "uniform highp mat4 matrix;\n"
-    "uniform float size;\n"
-    "void main() {\n"
-    "   gl_PointSize = size;\n"
-    "   gl_Position = matrix * posAttr;\n"
-    "}\n";
-
-static const char *fragmentShaderParticule =
-    "uniform vec4 color;\n"
-    "void main() {\n"
-    "   gl_FragColor = color;\n"
-    "}\n";
-
 TriangleWindow::TriangleWindow()
     : m_program(0)
     , m_frame(0)
@@ -50,7 +13,7 @@ TriangleWindow::TriangleWindow(int w, int h) : m_program(0), m_frame(0)
 
     _camX = 0;
     _camY = -14;
-    _camZ = -100;
+    _camZ = -120;
     _angle = 100;
 
     _wireFrame = false;
@@ -83,8 +46,8 @@ void TriangleWindow::initialize()
     initFall();
 
     m_program = new QOpenGLShaderProgram(this);
-    m_program->addShaderFromSourceCode(QOpenGLShader::Vertex, vertexShaderSource);
-    m_program->addShaderFromSourceCode(QOpenGLShader::Fragment, fragmentShaderSource);
+    m_program->addShaderFromSourceFile(QOpenGLShader::Vertex, ":/map.vert");
+    m_program->addShaderFromSourceFile(QOpenGLShader::Fragment, ":/map.frag");
     m_program->link();
     m_posAttr = m_program->attributeLocation("posAttr");
     m_colAttr = m_program->attributeLocation("colAttr");
@@ -237,8 +200,8 @@ void TriangleWindow::initFall()
     _fall = new Fall(particules, ground, fallSpeed, timerFall);
 
     particuleShader = new QOpenGLShaderProgram(this);
-    particuleShader->addShaderFromSourceCode(QOpenGLShader::Vertex, vertexShaderParticule);
-    particuleShader->addShaderFromSourceCode(QOpenGLShader::Fragment, fragmentShaderParticule);
+    particuleShader->addShaderFromSourceFile(QOpenGLShader::Vertex, ":/particule.vert");
+    particuleShader->addShaderFromSourceFile(QOpenGLShader::Fragment, ":/particule.frag");
     particuleShader->link();
     particulePosAttr = particuleShader->attributeLocation("posAttr");
     particulePointColor = particuleShader->uniformLocation("color");
@@ -277,7 +240,7 @@ void TriangleWindow::render()
     matrix.translate(_camX, _camY, _camZ);
     matrix.rotate(20, 1, 0, 0);
     matrix.rotate(_angle, 0, 1, 0);
-    matrix.translate(-70, 0, -40);
+    matrix.translate(-70, 0, -60);
 
     m_program->setUniformValue(m_matrixUniform, matrix);
 
@@ -293,9 +256,9 @@ void TriangleWindow::render()
 
     if(allSeasons[currentSeason] == "WINTER")
     {
-        _fall->setPointSize(3.0);
+        _fall->setPointSize(4.0);
         _fall->setFaster(0.0);
-        _fall->setPointColor(QVector4D(1.0, 1.0, 1.0, 1.0));
+        _fall->setPointColor(QVector4D(0.9, 0.9, 0.9, 0.0));
     }
     else if(allSeasons[currentSeason] == "AUTUMN")
     {

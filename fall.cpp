@@ -11,7 +11,7 @@ Fall::Fall(QVector<QVector3D> particules, QVector<float> ground, QVector<float> 
     _particules = particules;
     _grounds = ground;
     _fallSpeed = fallSpeed;
-    _pointColor = QVector4D(1.0, 1.0, 1.0, 1.0);
+    _pointColor = QVector4D(1.0, 1.0, 1.0, 0.5);
     _pointSize = 3.0;
     _faster = 0.0;
 }

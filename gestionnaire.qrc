@@ -15,5 +15,9 @@
         <file>texture2_neg.png</file>
         <file>texture3.png</file>
         <file>texture3_neg.png</file>
+        <file>map.frag</file>
+        <file>map.vert</file>
+        <file>particule.frag</file>
+        <file>particule.vert</file>
     </qresource>
 </RCC>
