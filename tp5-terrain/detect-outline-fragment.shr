@@ -1,0 +1,43 @@
+in vec2 fsInUV;
+
+out vec4 fsOut0;
+
+void main(void)
+{
+  float dx = 1.0 / uResolution.x;
+  float dy = 1.0 / uResolution.y;
+
+  vec3 center = sampleNrm( uTexNormals, vec2(0.0, 0.0) );
+
+  // sampling just these 3 neighboring fragments keeps the outline thin.
+  vec3 top = sampleNrm( uTexNormals, vec2(0.0, dy) );
+  vec3 topRight = sampleNrm( uTexNormals, vec2(dx, dy) );
+  vec3 right = sampleNrm( uTexNormals, vec2(dx, 0.0) );
+
+  // the rest is pretty arbitrary, but seemed to give me the
+  // best-looking results for whatever reason.
+
+  vec3 t = center - top;
+  vec3 r = center - right;
+  vec3 tr = center - topRight;
+
+  t = abs( t );
+  r = abs( r );
+  tr = abs( tr );
+
+  float n;
+  n = max( n, t.x );
+  n = max( n, t.y );
+  n = max( n, t.z );
+  n = max( n, r.x );
+  n = max( n, r.y );
+  n = max( n, r.z );
+  n = max( n, tr.x );
+  n = max( n, tr.y );
+  n = max( n, tr.z );
+
+  // threshold and scale.
+  n = 1.0 - clamp( clamp((n * 2.0) - 0.8, 0.0, 1.0) * 1.5, 0.0, 1.0 );
+
+  fsOut0.rgb = texture(uTexColor, fsInUV).rgb * (0.1 + 0.9*n);
+}
