@@ -15,9 +15,9 @@
 #include <QtCore>
 #include <QtGui>
 
-#include <omp.h>
+//#include <omp.h>
 
-int numParticules = 5000;
+int numParticules = 1000;
 int minP = 0;
 int maxP = 360;
 
@@ -95,26 +95,25 @@ void TriangleWindow::initialize()
 
     particules = new point[numParticules];
 
+
     for(int i = 0; i < numParticules; i++)
     {
-        int angle = minP + (rand() % (int)(maxP - minP + 1));
-        int dist = (rand() % (int)(100));
+        int angle =minP + (rand() % (int)(maxP - minP + 1));
+        int dist = (rand() % (int)(100 ));
         int alt = (rand() % (int)(100));
-        float x = dist*sin(
+        float x = sin(
                       ((3.14159 * 2) *
                        angle
                        )/360
-                      );
-        float y = dist*cos(
+                      )*dist;
+        float y = cos(
                       ((3.14159 * 2) *
                        angle
                        )/360
-                      );
+                      )*dist;
 
-        // x and y are in (-100,100)
-
-        particules[i].x = (float)(x)/(m_image.width());
-        particules[i].y = (float)(y)/(m_image.height());
+        particules[i].x = 0.5f + (float)+x/(m_image.width()) - ((float)m_image.width()/2.0)/m_image.width();
+        particules[i].y = 0.5f + (float)y/(m_image.height()) - ((float)m_image.height()/2.0)/m_image.height();
         particules[i].z = (float)(alt)/100;
     }
 
@@ -599,38 +598,28 @@ void TriangleWindow::updateParticlesAut()
         for(int id = 0; id < numParticules; id++)
         {
             particules[id].z -= 0.0003f * ((float) minP + (rand() % (int)(maxP - minP + 1)));
-            id2 = m_image.width()*m_image.width()/4 + (particules[id].x)*m_image.width() + particules[id].y;
-
-            if (id2<0)
-                qDebug() << "error x = " << particules[id].x << "  / " << m_image.width() << " y = " << particules[id].y << " / " << m_image.height();
-
-            if (id2>m_image.width()*m_image.height())
-                qDebug() << "error x = " << particules[id].x << "  / " << m_image.width() << " y = " << particules[id].y << " / " << m_image.height();
-
-            // restart when touching the ground
+            id2 = (particules[id].x)*m_image.width() + particules[id].y;
             if(particules[id].z < p[id2].z)
             {
                 int angle =minP + (rand() % (int)(maxP - minP + 1));
                 int dist = (rand() % (int)(100 ));
                 int alt = (rand() % (int)(100));
-                float x = dist*sin(
+                float x = sin(
                               ((3.14159 * 2) *
                                angle
                                )/360
-                              );
-                float y = dist*cos(
+                              )*dist;
+                float y = cos(
                               ((3.14159 * 2) *
                                angle
                                )/360
-                              );
+                              )*dist;
 
-                particules[id].x = (float)(x)/(m_image.width());
-                particules[id].y = (float)(y)/(m_image.height());
+                particules[id].x = 0.5f + (float)+x/(m_image.width()) - ((float)m_image.width()/2.0)/m_image.width();
+                particules[id].y = 0.5f + (float)y/(m_image.height()) - ((float)m_image.height()/2.0)/m_image.height();
                 particules[id].z = (float)(alt)/100;
 
             }
-            // else display the river or cover the round with snow
-
         }
     }
 
@@ -658,33 +647,25 @@ void TriangleWindow::updateParticlesHiv()
         for(int id = 0; id < numParticules; id++)
         {
             particules[id].z -= 0.00001f * ((float) minP + (rand() % (int)(maxP - minP + 1)));
-            id2 = m_image.width()*m_image.width()/4 + (particules[id].x)*m_image.width() + particules[id].y;
-
-            if (id2<0)
-                qDebug() << "error x = " << particules[id].x << "  / " << m_image.width() << " y = " << particules[id].y << " / " << m_image.height();
-
-            if (id2>m_image.width()*m_image.height())
-                qDebug() << "error x = " << particules[id].x << "  / " << m_image.width() << " y = " << particules[id].y << " / " << m_image.height();
-
-            // restart when touching the ground
+            id2 = (particules[id].x)*m_image.width() + particules[id].y;
             if(particules[id].z < p[id2].z)
             {
                 int angle =minP + (rand() % (int)(maxP - minP + 1));
-                int dist = (rand() % (int)(100));
-                int alt =  (rand() % (int)(100));
-                float x = dist*sin(
+                int dist = (rand() % (int)(100 ));
+                int alt = (rand() % (int)(100));
+                float x = sin(
                               ((3.14159 * 2) *
                                angle
                                )/360
-                              );
-                float y = dist*cos(
+                              )*dist;
+                float y = cos(
                               ((3.14159 * 2) *
                                angle
                                )/360
-                              );
+                              )*dist;
 
-                particules[id].x = (float)(x)/(m_image.width());
-                particules[id].y = (float)(y)/(m_image.height());
+                particules[id].x = 0.5f + (float)+x/(m_image.width()) - ((float)m_image.width()/2.0)/m_image.width();
+                particules[id].y = 0.5f + (float)y/(m_image.height()) - ((float)m_image.height()/2.0)/m_image.height();
                 particules[id].z = (float)(alt)/100;
             }
         }
