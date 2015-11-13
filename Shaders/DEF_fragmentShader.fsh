@@ -25,8 +25,9 @@ void main()
     //Our heightmap only has one color channel.
     float v = height * scale - bias;
     vec3 eye = normalize(eyeVec);
-    vec2 newCoords = texCoord + (eye.xy * v);
+    vec2 newCoords = gl_TexCoord[0].st + (eye.xy * v);
     vec3 rgb = texture2D(basetex, newCoords).rgb;
     gl_FragColor = vec4(rgb, 1.0);
 }
+
 */

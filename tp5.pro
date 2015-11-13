@@ -2,20 +2,17 @@ INCLUDEPATH += $$PWD
 SOURCES += $$PWD/openglwindow.cpp \
     gamewindow.cpp \
     Camera.cpp \
-    gamewindowclient.cpp \
-    gamewindowserveur.cpp \
-    mythread.cpp \
     filemanager.cpp \
     objetply3d.cpp \
-    mainpyramide.cpp
+    gamewindowshader.cpp \
+    trianglewindow.cpp
 HEADERS += $$PWD/openglwindow.h \
     Camera.h \
     gamewindow.h \
-    gamewindowclient.h \
-    gamewindowserveur.h \
-    mythread.h \
     filemanager.h \
-    objetply3d.h
+    objetply3d.h \
+    gamewindowshader.h \
+    trianglewindow.h
 
 SOURCES += \
     main.cpp

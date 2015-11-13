@@ -1,79 +1,18 @@
+#include "trianglewindow.h"
 #include "openglwindow.h"
 
-#include <gl/glu.h>
-
-#include <QtGui/QGuiApplication>
 #include <QtGui/QMatrix4x4>
 #include <QtGui/QOpenGLShaderProgram>
 #include <QtGui/QScreen>
 #include <QtOpenGL/QGLWidget>
 #include <QtCore/qmath.h>
 
-class TriangleWindow : public OpenGLWindow
-{
-public:
-    TriangleWindow();
-
-    void initialize() Q_DECL_OVERRIDE;
-    void render() Q_DECL_OVERRIDE;
-
-
-private:
-    void loadTexture2(char *filename, GLuint &textureID);
-    void textureTriangle2D();
-    void texturePyramide();
-    void sphereEclairageDiffus();
-    void sphereSEM();
-    void sphereNM();
-    void sphereDEF();
-
-    bool first;
-
-    GLuint m_matrixUniform;
-    GLuint m_cameraPosUniform;
-
-
-    GLuint backgroundimage1;
-    GLuint backgroundimage2;
-    GLuint backgroundimage3;
-    GLuint backgroundimage4;
-    GLuint backgroundimage5;
-    GLuint backgroundSphere;
-
-    GLuint backgroundSEM;
-    GLuint backgroundNM;
-
-    QOpenGLShaderProgram *m_program;
-    QOpenGLShaderProgram *m_programSEM;
-    QOpenGLShaderProgram *m_programNM;
-    QOpenGLShaderProgram *m_programDEF;
-
-    int m_frame;
-};
-
-TriangleWindow::TriangleWindow()
+TriangleWindow::TriangleWindow(int type)
     : m_program(0)
     , m_frame(0)
+    , m_type(type)
 {
 }
-
-int main(int argc, char **argv)
-{
-    QGuiApplication app(argc, argv);
-
-    QSurfaceFormat format;
-    format.setSamples(16);
-
-    TriangleWindow window;
-    window.setFormat(format);
-    window.resize(640, 480);
-    window.show();
-
-    window.setAnimating(true);
-
-    return app.exec();
-}
-
 
 void TriangleWindow::initialize()
 {
@@ -148,7 +87,7 @@ void TriangleWindow::textureTriangle2D()
 
         m_matrixUniform = m_program->uniformLocation("matrix");
 
-        loadTexture2("C:\\Users\\Bastien\\Desktop\\Workspace_QT\\tp5\\Texture\\textureSandstone.png", backgroundimage5);
+        loadTexture2("..\\tp5\\Texture\\textureSandstone.png", backgroundimage5);
         first = false;
     }
 
@@ -195,11 +134,11 @@ void TriangleWindow::texturePyramide(){
 
         m_matrixUniform = m_program->uniformLocation("matrix");
 
-        loadTexture2("C:\\Users\\Bastien\\Desktop\\Workspace_QT\\tp5\\Texture\\texture7.png", backgroundimage1);
-        loadTexture2("C:\\Users\\Bastien\\Desktop\\Workspace_QT\\tp5\\Texture\\texture.png", backgroundimage2);
-        loadTexture2("C:\\Users\\Bastien\\Desktop\\Workspace_QT\\tp5\\Texture\\texture5.jpg", backgroundimage3);
-        loadTexture2("C:\\Users\\Bastien\\Desktop\\Workspace_QT\\tp5\\Texture\\texture6.jpg", backgroundimage4);
-        loadTexture2("C:\\Users\\Bastien\\Desktop\\Workspace_QT\\tp5\\Texture\\textureSandstone.png", backgroundimage5);
+        loadTexture2("..\\tp5\\Texture\\texture7.png", backgroundimage1);
+        loadTexture2("..\\tp5\\Texture\\texture.png", backgroundimage2);
+        loadTexture2("..\\tp5\\Texture\\texture5.jpg", backgroundimage3);
+        loadTexture2("..\\tp5\\Texture\\texture6.jpg", backgroundimage4);
+        loadTexture2("..\\tp5\\Texture\\textureSandstone.png", backgroundimage5);
 
         first = false;
     }
@@ -301,7 +240,7 @@ void TriangleWindow::sphereEclairageDiffus(){
 
         m_matrixUniform = m_program->uniformLocation("matrix");
 
-        loadTexture2("C:\\Users\\Bastien\\Desktop\\Workspace_QT\\tp5\\Texture\\terre.jpg", backgroundSphere);
+        loadTexture2("..\\tp5\\Texture\\terre.jpg", backgroundSphere);
         first = false;
     }
 
@@ -322,7 +261,7 @@ void TriangleWindow::sphereEclairageDiffus(){
 
     m_program->setUniformValue(m_matrixUniform, matrix);
 
-    glEnable(GL_TEXTURE_2D);
+    //glEnable(GL_TEXTURE_2D);
     glBindTexture(GL_TEXTURE_2D, backgroundSphere);
 
     GLUquadric* params = gluNewQuadric();
@@ -333,7 +272,7 @@ void TriangleWindow::sphereEclairageDiffus(){
 
     gluDeleteQuadric(params);
 
-    glDisable(GL_TEXTURE_2D);
+    //glDisable(GL_TEXTURE_2D);
 
     m_program->release();
     ++m_frame;
@@ -350,8 +289,8 @@ void TriangleWindow::sphereSEM(){
 
         m_matrixUniform = m_programNM->uniformLocation("matrix");
 
-        loadTexture2("C:\\Users\\Bastien\\Desktop\\Workspace_QT\\tp5\\Texture\\terre.jpg", backgroundSphere);
-        loadTexture2("C:\\Users\\Bastien\\Desktop\\Workspace_QT\\tp5\\Texture\\SEM.jpg", backgroundSEM);
+        loadTexture2("..\\tp5\\Texture\\terre.jpg", backgroundSphere);
+        loadTexture2("..\\tp5\\Texture\\SEM.jpg", backgroundSEM);
 
         first = false;
     }
@@ -407,8 +346,8 @@ void TriangleWindow::sphereNM(){
 
         m_matrixUniform = m_programNM->uniformLocation("matrix");
 
-        loadTexture2("C:\\Users\\Bastien\\Desktop\\Workspace_QT\\tp5\\Texture\\terre.jpg", backgroundSphere);
-        loadTexture2("C:\\Users\\Bastien\\Desktop\\Workspace_QT\\tp5\\Texture\\NormalMap.png", backgroundNM);
+        loadTexture2("..\\tp5\\Texture\\terre.jpg", backgroundSphere);
+        loadTexture2("..\\tp5\\Texture\\NormalMap.png", backgroundNM);
 
         first = false;
     }
@@ -463,7 +402,7 @@ void TriangleWindow::sphereDEF(){
 
         m_matrixUniform = m_programDEF->uniformLocation("matrix");
 
-        loadTexture2("C:\\Users\\Bastien\\Desktop\\Workspace_QT\\tp5\\Texture\\terre.jpg", backgroundSphere);
+        loadTexture2("..\\tp5\\Texture\\terre.jpg", backgroundSphere);
         first = false;
     }
 
@@ -514,8 +453,8 @@ void TriangleWindow::sphereDEF(){
         m_matrixUniform = m_programDEF->uniformLocation("matrix");
         m_cameraPosUniform = m_programDEF->uniformLocation("CAMERA_POSITION");
 
-        loadTexture2("C:\\Users\\Bastien\\Desktop\\Workspace_QT\\tp5\\Texture\\terre.jpg", backgroundSphere);
-        loadTexture2("C:\\Users\\Bastien\\Desktop\\Workspace_QT\\tp5\\Texture\\NormalMap.png", backgroundNM);
+        loadTexture2("..\\tp5\\Texture\\terre.jpg", backgroundSphere);
+        loadTexture2("..\\tp5\\Texture\\NormalMap.png", backgroundNM);
 
         first = false;
     }
@@ -533,10 +472,10 @@ void TriangleWindow::sphereDEF(){
     matrix.translate(0, 0, -3);
     matrix.rotate(-50.0f * m_frame / screen()->refreshRate(), 0, 1, 0);
 
-    matrix.rotate(-180.0f, 0, 0, 1);
-    matrix.rotate(90.0f, 1, 0, 0);
+    //matrix.rotate(-180.0f, 0, 0, 1);
+    //matrix.rotate(90.0f, 1, 0, 0);
 
-    glm:vec3 vect (0.0f,0.0f,0.0f);
+    QVector3D vect (0.0f,0.0f,-3.0f);
 
     m_programDEF->setUniformValue(m_matrixUniform, matrix);
     m_programDEF->setUniformValue(m_cameraPosUniform, vect);
@@ -566,10 +505,15 @@ void TriangleWindow::render()
 {
 
     //textureTriangle2D();
-    //texturePyramide();
-    //sphereEclairageDiffus();
-    //sphereSEM();
-    sphereNM();
-    //sphereDEF();
+    if(m_type == PYRAMIDE)
+        texturePyramide();
+    else if(m_type == ECLAIRAGE_DIFFUS)
+        sphereEclairageDiffus();
+    else if(m_type == SPHERICAL_ENVIRONMENT_MAPPING)
+        sphereSEM();
+    else if(m_type == NORMAL_MAPPING)
+        sphereNM();
+    else if(m_type == GEOMETRY_DEFORMATION)
+        sphereDEF();
 
 }

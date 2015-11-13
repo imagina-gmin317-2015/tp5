@@ -1,9 +1,13 @@
-#ifndef GAMEWINDOW_H
-#define GAMEWINDOW_H
+#ifndef GAMEWINDOWSHADER_H
+#define GAMEWINDOWSHADER_H
 
 #include "openglwindow.h"
 #include "Camera.h"
 #include "objetply3d.h"
+
+#include <gl/glu.h>
+#include <QtGui/QGuiApplication>
+#include <QtGui/QOpenGLShaderProgram>
 
 #include <QList>
 
@@ -18,7 +22,6 @@
 #define ARBRE_PRINTEMPS 13
 #define TONNEAU 14
 
-
 #ifndef STRUCT_POINT
 #define STRUCT_POINT
 struct point
@@ -26,7 +29,6 @@ struct point
     float x, y ,z;
 };
 #endif
-
 
 #define MAX_PARTICLES 10000
 
@@ -42,7 +44,7 @@ typedef struct
 
 #endif
 
-class GameWindow : public OpenGLWindow
+class GameWindowShader : public OpenGLWindow
 {
     Q_OBJECT
 
@@ -50,7 +52,7 @@ public slots:
     void update_day();
 
 public:
-    GameWindow(int fps, Camera* camera, int day = 0);
+    GameWindowShader(int fps, Camera* camera, int day = 0);
 
     void initialize();
     void render();
@@ -60,10 +62,10 @@ public:
 
     void displayTriangles();
     void displayLines();
-    void displayTrianglesC();
     void displayPoints();
     void displayTrianglesTexture();
 
+    void bindTextureRegardingZ(float z);
     void displayColor(float);
     void displayColorSeasons(float);
 
@@ -73,6 +75,8 @@ public:
     void initentity(int index);
     void renderMeteo();
     void update();
+
+    void loadTexture2(char *filename, GLuint &textureID);
 
     int day() const;
     void setDay(int day);
@@ -95,6 +99,21 @@ public:
     void renderObjectsFace();
     void renderObjectsPoints();
 protected:
+
+    QString titre;
+
+    GLuint m_textureSable;
+    GLuint m_textureEau;
+    GLuint m_textureEauProfonde;
+    GLuint m_textureFeuilleMorte;
+    GLuint m_textureMontagne;
+    GLuint m_textureNeige;
+    GLuint m_textureHerbe;
+    GLuint m_normalMap;
+
+    GLuint m_matrixUniform;
+
+    QOpenGLShaderProgram *m_programNM;
 
     ObjetPly3D m_arbreEte;
     ObjetPly3D m_arbreHiver;
@@ -127,4 +146,4 @@ protected:
 };
 
 
-#endif // GAMEWINDOW_H
+#endif // GAMEWINDOWSHADER_H

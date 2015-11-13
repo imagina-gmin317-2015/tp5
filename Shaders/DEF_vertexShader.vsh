@@ -4,7 +4,6 @@ in vec4 in_Vertex;
 
 uniform mat4 matrix;
 
-
 varying vec3 normal;
 
 vec4 DoTwist(vec4 pos, float t )
@@ -43,20 +42,56 @@ void main(void)
 
 }
 
-
 /*
+
 //attribute vec3 tangent;
 //attribute vec3 binormal;
 uniform vec3 CAMERA_POSITION;
+uniform sampler2D texture2;
+
+uniform mat4 matrix;
 varying vec3 eyeVec;
+varying vec3 N;
+varying mat3 normalMatrix;
+
 void main()
 {
-    gl_Position = ftransform();
+    vec4 NormalMap = texture2D(texture2, vec2(gl_TexCoord[1]));
+
+    //convert to range -1.0 to 1.0
+    vec3 normal = normalize(NormalMap.rgb * 2.0 - 1.0);
+
+    vec3 tangent;
+    vec3 binormal;
+
+    vec3 c1 = cross(normal, vec3(0.0, 0.0, 1.0));
+    vec3 c2 = cross(normal, vec3(0.0, 1.0, 0.0));
+
+    if(length(c1)>length(c2))
+    {
+        tangent = c1;
+    }
+    else
+    {
+        tangent = c2;
+    }
+
+    tangent = normalize(tangent);
+
+    binormal = cross(normal, tangent);
+    binormal = normalize(binormal);
+
+    vec3 t = normalize(normalMatrix * tangent);
+    vec3 b = cross(N, t);
+
+    gl_Position = ftransform() * matrix;
     gl_TexCoord[0] = gl_TextureMatrix[0] * gl_MultiTexCoord0;
     //mat3 TBNMatrix = mat3(tangent, binormal, gl_Normal);
-    mat3 TBNMatrix = mat3(vec3(1,1,1), vec3(1,1,1), gl_Normal);
+    mat3 TBNMatrix = mat3(t, b, gl_Normal);
     eyeVec = CAMERA_POSITION - gl_Vertex.xyz;
     eyeVec *= TBNMatrix;
 }
 
 */
+
+
