@@ -1,0 +1,8 @@
+varying lowp float col;
+varying vec4 color;
+uniform vec4 ambiant_color;
+void main() {
+	gl_FragColor = color * (ambiant_color * col);
+}
+
+
