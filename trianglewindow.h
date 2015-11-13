@@ -2,11 +2,23 @@
 #define TRIANGLEWINDOW_H
 
 #include "openglwindow.h"
+#include "filemanager.h"
+#include "plyloader.h"
+#include <QString>
+#include <QVector>
+#include <QVector3D>
 
-struct point
+/*struct point
 {
     float x, y ,z;
-};
+};*/
+
+class FileManager;
+
+
+
+
+
 
 class paramCamera
 {
@@ -17,6 +29,13 @@ public:
     float anim = 0.0f;
 
     int etat = 0;
+
+    QString toSave();
+    void loadParam(float anim, int etat, float rotX, float rotY, float ss);
+
+
+
+
 };
 
 class TriangleWindow : public OpenGLWindow
@@ -47,6 +66,13 @@ public:
 
     void setSeason(int );
 
+
+    QString toSave();
+    void loadWindow(float anim, int etat, float rotX,float rotY,float ss, int season, int day);
+    QVector<PlyLoader*> getMods();
+    void addMods(PlyLoader* ply);
+
+
 public slots:
     void updateSeason();
 
@@ -54,9 +80,10 @@ private:
     int nbTick = 0;
     int m_frame = 0;
     int season, day;
-    point* particules;
+
     bool master = false;
 
+    point* particules;
     QImage m_image;
     point *p;
     int carte=1;
@@ -64,6 +91,11 @@ private:
 
     QTimer *timer;
     QTimer *timerFPS;
+    QVector<PlyLoader* > mods;
+    QOpenGLTexture* text;
+    QVector<QVector3D> points;
+    QVector<QVector3D> normals;
+    QOpenGLShaderProgram* shader;
 };
 
 
