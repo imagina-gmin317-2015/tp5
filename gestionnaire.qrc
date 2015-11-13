@@ -2,6 +2,18 @@
     <qresource prefix="/">
         <file>heightmap-1.png</file>
         <file>heightmap-2.png</file>
-        <file>heightmap-3.png</file>                
+        <file>heightmap-3.png</file>
+        <file>wintertree.ply</file>
+        <file>summertree.ply</file>
+        <file>springtree.ply</file>
+        <file>autumntree.ply</file>
+        <file>grass_texture.jpg</file>
+        <file>diamond_texture.jpg</file>
+        <file>shaders/vertex_pyramid_shader_v1</file>
+        <file>shaders/vertex_map_shader_v2</file>
+        <file>shaders/vertex_map_shader_v1</file>
+        <file>shaders/fragment_pyramid_shader_v1</file>
+        <file>shaders/fragment_map_shader_v2</file>
+        <file>shaders/fragment_map_shader_v1</file>
     </qresource>
 </RCC>

@@ -1,7 +1,7 @@
 /****************************************************************************
 **
-** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
-** Contact: http://www.qt-project.org/legal
+** Copyright (C) 2015 The Qt Company Ltd.
+** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the documentation of the Qt Toolkit.
 **
@@ -17,8 +17,8 @@
 **     notice, this list of conditions and the following disclaimer in
 **     the documentation and/or other materials provided with the
 **     distribution.
-**   * Neither the name of Digia Plc and its Subsidiary(-ies) nor the names
-**     of its contributors may be used to endorse or promote products derived
+**   * Neither the name of The Qt Company Ltd nor the names of its
+**     contributors may be used to endorse or promote products derived
 **     from this software without specific prior written permission.
 **
 **
@@ -39,18 +39,18 @@
 ****************************************************************************/
 
 #include "openglwindow.h"
+
 #include <QtCore/QCoreApplication>
 
 #include <QtGui/QOpenGLContext>
 #include <QtGui/QOpenGLPaintDevice>
 #include <QtGui/QPainter>
-#include <iostream>
-using namespace std;
 
 //! [1]
 OpenGLWindow::OpenGLWindow(QWindow *parent)
     : QWindow(parent)
-
+    , m_update_pending(false)
+    , m_animating(false)
     , m_context(0)
     , m_device(0)
 {
@@ -84,19 +84,28 @@ void OpenGLWindow::render()
     QPainter painter(m_device);
     render(&painter);
 }
+//! [2]
+
+//! [3]
+void OpenGLWindow::renderLater()
+{
+    if (!m_update_pending) {
+        m_update_pending = true;
+        QCoreApplication::postEvent(this, new QEvent(QEvent::UpdateRequest));
+    }
+}
 
 bool OpenGLWindow::event(QEvent *event)
 {
     switch (event->type()) {
     case QEvent::UpdateRequest:
-
+        m_update_pending = false;
         renderNow();
         return true;
     default:
         return QWindow::event(event);
     }
 }
-
 
 void OpenGLWindow::exposeEvent(QExposeEvent *event)
 {
@@ -116,6 +125,7 @@ void OpenGLWindow::renderNow()
     bool needsInitialize = false;
 
     if (!m_context) {
+        qDebug()<<"here";
         m_context = new QOpenGLContext(this);
         m_context->setFormat(requestedFormat());
         m_context->create();
@@ -125,8 +135,7 @@ void OpenGLWindow::renderNow()
 
     m_context->makeCurrent(this);
 
-    if (needsInitialize)
-    {
+    if (needsInitialize) {
         initializeOpenGLFunctions();
         initialize();
     }
@@ -135,5 +144,18 @@ void OpenGLWindow::renderNow()
 
     m_context->swapBuffers(this);
 
+    if (m_animating)
+        renderLater();
 }
+//! [4]
+
+//! [5]
+void OpenGLWindow::setAnimating(bool animating)
+{
+    m_animating = animating;
+
+    if (animating)
+        renderLater();
+}
+//! [5]
 
