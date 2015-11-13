@@ -1,5 +1,3 @@
-#include "trianglewindow.h"
-
 #include <QtGui/QGuiApplication>
 #include <QtGui/QMatrix4x4>
 #include <QtGui/QOpenGLShaderProgram>
@@ -15,49 +13,64 @@
 #include <QtCore>
 #include <QtGui>
 
-#include <omp.h>
+#include "tcpserver.h"
+//#include "gamewindow.h"
+#include "trianglewindow.h"
+#include "camera.h"
+#include "point.h"
 
 using namespace std;
 
 
 int main(int argc, char **argv)
 {
-//test omp
-//#pragma omp parallel
-//    qDebug() << "Hello from thread %d, nthreads %d\n", omp_get_thread_num(), omp_get_num_threads();
-
     srand(time(NULL));
     QGuiApplication app(argc, argv);
-    
+
     QSurfaceFormat format;
     format.setSamples(16);
-    
-    paramCamera* c=new paramCamera();
-    
-    QTimer* calendar = new QTimer;
+    format.setDepthBufferSize(1);
 
-    TriangleWindow* window[4];
-    for(int i = 0; i < 4; i++)
-    {
-        if (i == 0)
-            window[i] = new TriangleWindow();
-        else
-            window[i] = new TriangleWindow(30);
-        window[i]->setSeason(i);
-        window[i]->c = c;
-        window[i]->setFormat(format);
-        window[i]->resize(500,375);
-        int x = i%2;
-        int y = i>>1;
-                
-        window[i]->setPosition(x*500,y*450);
-        window[i]->show();
 
-        calendar->connect(calendar, SIGNAL(timeout()),window[i], SLOT(updateSeason()));
-    }
-    
-    calendar->start(20);
+    // TP 5
+    TriangleWindow window(640, 480);
+    window.setFormat(format);
+    window.resize(640, 480);
+    window.show();
+
+    window.setAnimating(true);
+
+//    TcpServer server;
+
+//    Camera* c=new Camera();
+
+//    GameWindow window(1000, 9999);
+//    window.c = c;
+//    window.setFormat(format);
+//    window.resize(500,375);
+//    window.setPosition(0,0);
+//    window.show();
+
+//    GameWindow window2(1000, 9999);
+//    window2.c = c;
+//    window2.setFormat(format);
+//    window2.resize(500,375);
+//    window2.setPosition(500, 0);
+//    window2.show();
+
+//    GameWindow window3(1000, 9999);
+//    window3.c = c;
+//    window3.setFormat(format);
+//    window3.resize(500,375);
+//    window3.setPosition(0, 450);
+//    window3.show();
+
+//    GameWindow window4(1000, 9999);
+//    window4.c = c;
+//    window4.setFormat(format);
+//    window4.resize(500,375);
+//    window4.setPosition(500,450);
+//    window4.show();
 
     return app.exec();
 }
-

@@ -1,17 +1,31 @@
 QMAKE_MAC_SDK = macosx10.11
-
-QMAKE_CXXFLAGS += -stdlib=libc++ -std=c++11 -fopenmp
+QT       += network
+QMAKE_CXXFLAGS += -stdlib=libc++ -std=c++11
 
 INCLUDEPATH += /opt/local/include
-INCLUDEPATH += /usr/local/include/libiomp
-
 LIBS += -stdlib=libc++
 
 SOURCES += $$PWD/openglwindow.cpp \
-    main.cpp \
-    trianglewindow.cpp
+    tcpserver.cpp \
+    camera.cpp \
+    point.cpp \
+    particule.cpp \
+    filemanager.cpp \
+    gamewindow.cpp \
+    trianglewindow.cpp \
+    fall.cpp
 HEADERS += $$PWD/openglwindow.h \
-    trianglewindow.h
+    tcpserver.h \
+    camera.h \
+    point.h \
+    particule.h \
+    filemanager.h \
+    gamewindow.h \
+    trianglewindow.h \
+    fall.h
+
+SOURCES += \
+    main.cpp
 
 target.path = .
 

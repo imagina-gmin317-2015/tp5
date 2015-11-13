@@ -59,10 +59,13 @@ public:
     virtual void render();
 
     virtual void initialize();
+    void setAnimating(bool animating);
 
 
 public slots:
     void renderNow();
+    void renderLater();
+
 protected:
 
     bool event(QEvent *event);
@@ -74,6 +77,8 @@ private:
 
     QOpenGLContext *m_context;
     QOpenGLPaintDevice *m_device;
+    bool m_animating;
+    bool m_update_pending;
 };
 //! [1]
 
